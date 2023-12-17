@@ -1,0 +1,11 @@
+BACKUP ~spell50/backup~
+AUTHOR ~weimer@cs.berkeley.edu~
+
+BEGIN ~Extend Many Spells to 50th Level~
+
+COPY    ~spell50/spl~   ~override~
+
+// GB meteor swarm, ice storm, fire storm fixes
+COPY_EXISTING ~METSWARM.PRO~ ~override/metswarm.pro~
+              ~ICESTORM.PRO~ ~override/icestorm.pro~
+  WRITE_BYTE 0x216 4
