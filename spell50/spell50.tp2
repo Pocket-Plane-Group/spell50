@@ -1,7 +1,54 @@
-BACKUP ~spell50/backup~
-AUTHOR ~weimer@cs.berkeley.edu~
+BACKUP ~weidu_external/spell50/backup~
+SUPPORT ~https://forums.pocketplane.net/index.php?board=43.0~
 
-BEGIN ~Extend Many Spells to 50th Level~
+VERSION ~v6~
+
+README ~spell50/readme-spell50-%LANGUAGE%.html~ ~spell50/readme-spell50.html~
+
+ALWAYS
+
+  ACTION_IF ((FILE_EXISTS ~dlc/sod-dlc.zip~) OR (FILE_EXISTS ~sod-dlc.zip~)) THEN BEGIN FAIL @0 END // DLC Merger check
+
+  ACTION_IF !VARIABLE_IS_SET cd_spell50 THEN BEGIN
+  
+    OUTER_SET cd_spell50 = 1
+  
+    ACTION_IF GAME_IS ~bgee bg2ee eet iwdee~ THEN BEGIN
+
+      OUTER_SET enhanced_edition = 1
+      OUTER_SPRINT ~tra_location~ ~spell50/languages~
+    
+    END ELSE BEGIN
+  
+      OUTER_SET enhanced_edition = 0
+      OUTER_SPRINT ~tra_location~ ~weidu_external/spell50/languages~
+
+      // convert strings from UTF-8 for originals
+      ACTION_DEFINE_ARRAY cdreload BEGIN game END
+      ACTION_DEFINE_ARRAY cdnoconvert BEGIN weidu END
+      LAF HANDLE_CHARSETS INT_VAR from_utf8 = 1 infer_charsets = 1 
+                          STR_VAR default_language = ~english~ tra_path = ~spell50/languages~ out_path = ~weidu_external/spell50/languages~ noconvert_array = cdnoconvert reload_array = cdreload END
+    
+    END    
+
+  END
+
+END
+
+LANGUAGE ~English~ ~english~ 
+  ~spell50/languages/english/weidu.tra~ // installer strings
+  ~spell50/languages/english/game.tra~  // strings for the tlk
+
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////                                                  \\\\\
+///// Icewind Dale Casting Graphics                    \\\\\
+/////                                                  \\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+
+BEGIN @1000 DESIGNATED 0
+LABEL ~cd_spell50~
 
 COPY    ~spell50/spl~   ~override~
 
