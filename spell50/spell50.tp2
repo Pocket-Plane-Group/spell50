@@ -3,6 +3,8 @@ SUPPORT ~https://forums.pocketplane.net/index.php?board=43.0~
 
 VERSION ~v6~
 
+AUTO_EVAL_STRINGS
+
 README ~spell50/readme-spell50-%LANGUAGE%.html~ ~spell50/readme-spell50.html~
 
 ALWAYS
@@ -42,17 +44,149 @@ LANGUAGE ~English~ ~english~
 /////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
 /////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
 /////                                                  \\\\\
-///// Icewind Dale Casting Graphics                    \\\\\
+///// Spell-50                                         \\\\\
 /////                                                  \\\\\
 /////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
 /////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
 
-BEGIN @1000 DESIGNATED 0
+/////                                                  \\\\\
+///// Spell-50                                         \\\\\
+/////                                                  \\\\\
+
+BEGIN @2 DESIGNATED 0
+SUBCOMPONENT @1 // extend spells
 LABEL ~cd_spell50~
 
-COPY    ~spell50/spl~   ~override~
+OUTER_SET cap = 50
+INCLUDE ~spell50/lib/spell50.tpa~
 
-// GB meteor swarm, ice storm, fire storm fixes
-COPY_EXISTING ~METSWARM.PRO~ ~override/metswarm.pro~
-              ~ICESTORM.PRO~ ~override/icestorm.pro~
-  WRITE_BYTE 0x216 4
+/////                                                  \\\\\
+///// Spell-40                                         \\\\\
+/////                                                  \\\\\
+
+BEGIN @3 DESIGNATED 1
+SUBCOMPONENT @1 // extend spells
+LABEL ~cd_spell40~
+
+OUTER_SET cap = 40
+INCLUDE ~spell50/lib/spell50.tpa~
+
+/////                                                  \\\\\
+///// Spell-30                                         \\\\\
+/////                                                  \\\\\
+
+BEGIN @4 DESIGNATED 1
+SUBCOMPONENT @1 // extend spells
+LABEL ~cd_spell30~
+
+OUTER_SET cap = 30
+INCLUDE ~spell50/lib/spell50.tpa~
+
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////                                                  \\\\\
+///// Cam's info tool                                  \\\\\
+/////                                                  \\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\/////\\\\\
+
+/*
+this internal component is used by Cam to generate a list of spells 
+with more than one ability. the generated list is then checked to see
+if the spells should be extended. No tra references as it's purely a
+component for Cam to use when making/updating the mod.
+*/
+
+BEGIN ~Cam's Info Tool~ DESIGNATED 10000 NO_LOG_RECORD
+DEPRECATED ~Internal use only~
+
+OUTER_SPRINT file bg2ee
+ACTION_IF GAME_IS ~bgee~ BEGIN OUTER_SPRINT file bgee END
+ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SPRINT file iwdee END
+ACTION_IF GAME_IS ~eet~ BEGIN OUTER_SPRINT file eet END
+ACTION_IF GAME_IS ~soa tob bgt~ BEGIN OUTER_SPRINT file obg2 END
+ACTION_IF GAME_IS ~iwd~ BEGIN OUTER_SPRINT file oiwd END
+ACTION_IF GAME_IS ~how totlm~ BEGIN OUTER_SPRINT file oiwd_exp END
+OUTER_SPRINT code ~spell50/spellcheck_%file%_code.txt~
+OUTER_SPRINT file ~spell50/spellcheck_%file%.txt~
+
+<<<<<<<<./inline/spellcheck.txt
+>>>>>>>>
+
+COPY ~./inline/spellcheck.txt~ ~%file%~
+     ~./inline/spellcheck.txt~ ~%code%~
+
+OUTER_SPRINT name ~~
+COPY_EXISTING_REGEXP GLOB ~^.+\.spl$~ ~override~
+  READ_SHORT 0x68 abil_num
+  PATCH_IF abil_num > 1 BEGIN
+    SPRINT spell ~%SOURCE_RES%~
+    TO_LOWER spell
+    READ_LONG 0x08 name_str
+    PATCH_IF ((name_str >= 0) OR // has valid name; if likely a subspell with no name set, preserve name from previous spell patch
+              ("%spell%" STRING_COMPARE_REGEXP "^\(sppr\|spwi\|spin\|spcl\)[0-9][0-9][0-9][a-z]$")) BEGIN
+      READ_STRREF 0x08 name
+    END ELSE BEGIN // subspell, lookup name from suspected parent spell
+      INNER_PATCH_SAVE parent ~%spell%~ BEGIN 
+        REPLACE_TEXTUALLY ~^\(\(sppr\|spwi\|spin\|spcl\)[0-9][0-9][0-9]\)[a-z]$~ ~\1~
+      END
+      INNER_ACTION BEGIN   
+        COPY_EXISTING ~%parent%.spl~ ~override~
+          PATCH_PRINT ~cheking parent %parent% of spell %spell%~
+          READ_STRREF 0x08 name 
+          SPRINT name ~[subspell of %name%]~          
+          BUT_ONLY IF_EXISTS
+      END 
+    END      
+    TO_LOWER name
+    INNER_PATCH_SAVE name ~%name%~ BEGIN
+      REPLACE_TEXTUALLY ~<invalid strref -?[0-9]+>~ ~[no name]~
+    END
+    SET digit = 0
+    SET symbol = 0
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^sppr[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 1000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spwi[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 2000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spin[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 3000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spcl[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 4000
+    END
+    PATCH_IF digit BEGIN    
+      INNER_PATCH ~%spell%~ BEGIN
+        REPLACE_EVALUATE ~^\(sppr\|spwi\|spin\|spcl\)\([0-9][0-9][0-9]\)\([a-z]\)$~ BEGIN
+          SET num = MATCH2 + digit
+          SPRINT extra ~%MATCH3%~
+        END ~%MATCH1%%MATCH2%%MATCH3%~
+        REPLACE_EVALUATE ~^\(sppr\|spwi\|spin\|spcl\)\([0-9][0-9][0-9]\)$~ BEGIN
+          SET num = MATCH2 + digit
+          SPRINT extra ~~
+        END ~%MATCH1%%MATCH2%~
+        TO_LOWER extra
+        LOOKUP_IDS_SYMBOL_OF_INT symbol ~spell~ ~%num%~
+      END
+    END      
+    PATCH_IF IS_AN_INT symbol BEGIN    
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^........$" = 0) BEGIN SPRINT spc " " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^.......$" = 0) BEGIN SPRINT spc "  " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^......$" = 0) BEGIN SPRINT spc "   " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^.....$" = 0) BEGIN SPRINT spc "    " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^....$" = 0) BEGIN SPRINT spc "     " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^...$" = 0) BEGIN SPRINT spc "      " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^..$" = 0) BEGIN SPRINT spc "       " END ELSE
+                                                                BEGIN SPRINT spc "        " END
+      SPRINT msg "COPY_EXISTING ~%spell%.spl~%spc%~override~ // %name%"
+    END ELSE BEGIN  
+      SPRINT msg "COPY_EXISTING ~%%symbol%%%extra%.spl~ ~override~ // %spell%, %name%"
+    END
+    INNER_ACTION BEGIN 
+      APPEND_OUTER ~%file%~ ~%msg%~ 
+      OUTER_SPRINT msg ~%msg%%WNL%  LPF CD_EXTEND-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 END%WNL%  BUT_ONLY IF_EXISTS%WNL%%WNL%~
+      APPEND_OUTER ~%code%~ ~%msg%~ KEEP_CRLF 
+    END  
+  END
+  BUT_ONLY

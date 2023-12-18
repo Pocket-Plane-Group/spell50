@@ -1,2 +1,5 @@
 @0 = ~DLC Merger is required before mods can be installed on this game. Check the readme for more information and a link to download DLC Merger.~
-@1 = ~Extend Many Spells to 50th Level~
+@1 = ~Extend Many Spells to Level:~
+@2 = ~50~
+@3 = ~40~
+@4 = ~30~
