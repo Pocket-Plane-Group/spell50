@@ -1,0 +1,653 @@
+/////                                                  \\\\\
+///// mainline divine spells                           \\\\\
+/////                                                  \\\\\
+
+COPY_EXISTING ~#prayerb.spl~ ~override~ // [no name] subspell of prayer (sppr202)
+              ~#prayerg.spl~ ~override~ // [no name] subspell of prayer (sppr202)
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~#reciteb.spl~ ~override~ // [no name] subspell of recitation, sppr420
+              ~#reciteg.spl~ ~override~ // [no name] subspell of recitation, sppr420
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_PROTECT_FROM_EVIL%.spl~ ~override~ // sppr107, protection from evil
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) END // three rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_SHILLELAGH%.spl~ ~override~ // sppr110, shillelagh
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) END // four rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_ARMOR_OF_FAITH%.spl~ ~override~ // sppr111, armor of faith
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) RET abil_delta END // three rounds + 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // absorbs 5% of damage every five levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF (((op >= 27) AND (op <= 31)) OR ((op >= 86) AND (op <= 89))) BEGIN // ops for various damage resistances
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (((level / 5) + 1) * 5)
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_FAERIE_FIRE%.spl~ ~override~ // sppr116
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (4 * round) END // four rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_SUNSCORCH%.spl~  ~override~ // sppr118, sunscorch [iwdee/iwdspells]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 END // duration is static, just create headers
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_SUNSCORCH%c.spl~ ~override~ // sppr118, sunscorch (non-undead/non-myconid damage) [iwdee/iwdspells]
+              ~%CLERIC_SUNSCORCH%d.spl~ ~override~ // sppr118, sunscorch (undead/myconid damage) [iwdee/iwdspells]
+  PATCH_IF ("%SOURCE_RES%" STRING_COMPARE_CASE ~%CLERIC_SUNSCORCH%d~ = 0) BEGIN SET multiply = 2 END ELSE BEGIN SET multiply = 1 END
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = multiply base_dmg_rolls = 1 END // damage is 1d6 + 1/level or 1d6 + 2/level for undead/myconids
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SPIRIT_WARD%.spl~ ~override~ // sppr150, spirit ward
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) END // three rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_AID%.spl~ ~override~ // sppr201, aid
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = round min_dur = 6 END // one round + 1 round/level, has one 6-second 215
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_BARKSKIN%.spl~ ~override~ // sppr202, barkskin
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) RET abil_delta END // four rounds + 1 round/level 
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // also gets an AC bump every four levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 0 BEGIN // ac
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (6 - (level /4))
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_FLAME_BLADE%.spl~ ~override~ // sppr206, flame blade
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // four rounds + 1 round/2 levels
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_RESIST_FIRE%.spl~ ~override~ // sppr210, resist fire and cold
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_SILENCE_15_FOOT%.spl~ ~override~ // sppr211, silence, 15' radius
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (2 * round) END // two rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_SPIRITUAL_HAMMER%.spl~ ~override~ // sppr213, spiritual hammer
+              ~spin113.spl~                   ~override~ // spiritual hammer
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) min_dur = 6 RET abil_delta END // three rounds + 1 round/level  
+  // hammer also gains an additional +1 enchantment every 6 levels (max at +6)  
+  PATCH_IF abil_delta <= 0 BEGIN
+    SET hammer = 0 // prevent hammer-creation loop below unless we extended spell
+  END ELSE BEGIN // if we added abilities 
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // start at existing abilities, as first hammer improvement should occur in old effects
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN // create weapon
+          SET hammer = (((level - 1) / 6) + 1) // increases at 7, 13, 19, 25, 31
+          PATCH_IF hammer < 2 BEGIN 
+            SPRINT resource ~shammr~ 
+          END ELSE BEGIN
+            PATCH_IF hammer > 5 BEGIN SET hammer = 6 END
+            SPRINT resource ~shammr%hammer%~
+          END  
+          WRITE_ASCIIE (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) ~%resource%~ #8 // new hammer
+        END          
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+  
+OUTER_FOR (index = 2 ; index < (hammer + 1) ; ++index) BEGIN // taking advantage that the highest-level hammer var is left over from above patch
+
+  ACTION_IF !FILE_EXISTS_IN_GAME ~shammr%index%.itm~ BEGIN
+  
+    COPY_EXISTING ~shammr.itm~ ~override/shammr%index%.itm~
+      WRITE_LONG 0x60 index // enchantment
+      PATCH_IF index > 3 BEGIN SET speed = 0 END ELSE BEGIN SET speed = (4 - index) END
+      LPF ALTER_HEADER INT_VAR speed to_hit = index damage = (index + 1) END // to-hit, damage, speed of a +x weapon
+  
+  END
+
+END  
+  
+COPY_EXISTING ~%CLERIC_DRAW_UPON_HOLY_MIGHT%.spl~ ~override~ // sppr214, draw upon holy might
+              ~%INNATE_DRAW_UPON_HOLY_MIGHT%.spl~ ~override~ // spin103, draw upon holy might
+              ~bhaal2a.spl~                       ~override~ // draw upon holy might
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (10 * round) step_dur = 0 step_size = 3 RET abil_delta END // duration is static, just create headers 
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // gets +1 con/str/dex every three levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 132 BEGIN // ac
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 3)
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_CALL_LIGHTNING%.spl~ ~override~ // sppr302, call lightning
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 base_dmg_rolls = 2 save_for_half = 1 RET abil_delta END // damage is 2d8 + 1d8 per level of caster
+  // duration is one round/4 levels, but duration is handled by projectile
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // fix duration; damage is 2d8 + 1d8 per level of caster
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      PATCH_IF level > 43 BEGIN SET proj = 91 END ELSE BEGIN SET proj = (80 + (level / 4)) END // 91 is last call lightning projectile
+      WRITE_SHORT (abil_off + 0x26 + (index * 0x28)) proj // projectile
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_GLYPH_OF_WARDING%.spl~ ~override~ // sppr304, glyph of warding
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 END // damage is 1d4/level, no save
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_HOLD_ANIMAL%.spl~ ~override~ // sppr305, hold animal
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (2 * round) END // two rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_PROTECTION_FROM_FIRE%.spl~ ~override~ // sppr306, protection from fire
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) END // three rounds + 1 round/level  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_HOLY_SMITE%.spl~    ~override~ // sppr313, holy smite
+              ~%CLERIC_UNHOLY_BLIGHT%.spl~ ~override~ // sppr314, unholy blight
+  // don't patch automatically
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 damage_rolls = 1 RET abil_delta END // don't mess with durations as they don't scale
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET eff_num = 0
+    // damage is 1d4/level, but done via eff without EEFP - damage scaling with EEFP gets handled by CD_LEVEL_SELECT-O-MATIC
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) eff_file
+        PATCH_IF ((op = 177) AND ("%eff_file%" STRING_COMPARE_REGEXP "^sp313l[0-9]+$" = 0)) BEGIN // damage eff
+          READ_LONG (fx_off + 0x24 + ((index2 + abil_fx_idx) * 0x30)) save // have to account for non-EE damage split
+          PATCH_IF ((save & (BIT0 + BIT1 + BIT2 + BIT3 + BIT4)) = 0) BEGIN // 1/2 damage that always happens 
+            SET eff_num = (level / 2)  
+          END ELSE BEGIN
+            SET eff_num = ((level + 1) / 2)
+          END  
+          PATCH_IF eff_num < 10 BEGIN SET off = 0x1b END ELSE BEGIN SET off = 0x1a END
+          WRITE_ASCIIE (fx_off + off + ((index2 + abil_fx_idx) * 0x30)) ~%eff_num%~
+        END
+      END
+    END  
+  END
+  BUT_ONLY IF_EXISTS
+
+ACTION_IF eff_num BEGIN // if holy smite/unholy blight is using effs at all
+  OUTER_FOR (index = 11 ; index <= (cap / 2) ; ++index) BEGIN
+    ACTION_IF !FILE_EXISTS_IN_GAME ~sp313l%index%.eff~ BEGIN
+      COPY_EXISTING ~sp313l10.eff~ ~override/sp313l%index%.eff~
+        WRITE_LONG 0x38 index
+    END
+  END
+END
+  
+COPY_EXISTING ~%CLERIC_FREE_ACTION%.spl~ ~override~ // sppr403, free action
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (10 * round) END // one turn + 1 round/level  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_PROTECTION_FROM_LIGHTNING%.spl~ ~override~ // sppr407, protection from lightning
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (5 * round) END // five rounds/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_PROTECTION_FROM_EVIL_10_FOOT%.spl~ ~override~ // sppr408, protection from evil, 10' radius
+              ~ohprgd10.spl~                              ~override~ // protection from good, 10' radius
+              ~spcl233.spl~                               ~override~ // protection from evil, 10' radius
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_DEATH_WARD%.spl~ ~override~ // sppr409, death ward
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
+  BUT_ONLY IF_EXISTS
+ 
+ ACTION_IF !GAME_IS ~iwdee~ BEGIN 
+
+  COPY_EXISTING ~%CLERIC_POISON%.spl~ ~override~ // sppr411, poison
+    // extrapolating as an extra 2d8 and an additional 1 poison damage per two levels
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 damage_special = 1 damage_rolls = 2 RET abil_delta END // ups damage +2d8 every new header
+    // base damage is done by function, but need an extra poison effect for lingering damage
+    PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+      SET fx_delta = 0
+      READ_LONG  0x64 abil_off
+      READ_SHORT 0x68 abil_num
+      READ_LONG  0x6a fx_off
+      SET clone_poison = 0
+      FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        SET clone_poison += 1
+        SET clone_poison_done = 0
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+          PATCH_IF op = 25 AND !clone_poison_done BEGIN // add extra poison opcodes
+            READ_ASCII   (fx_off +        ((index2 + abil_fx_idx) * 0x30)) poison (48)
+            SET clone_poison_done = 1
+            FOR (index3 = 0 ; index3 < clone_poison ; ++index3) BEGIN
+              INSERT_BYTES (fx_off +        ((index2 + abil_fx_idx) * 0x30)) 0x30
+              WRITE_ASCIIE (fx_off +        ((index2 + abil_fx_idx) * 0x30)) ~%poison%~ #48
+              SET fx_delta += 1
+              SET abil_fx_num += 1
+              SET index2 += 1
+            END
+          END          
+        END  
+        WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      END
+    END  
+    BUT_ONLY IF_EXISTS
+    
+END
+  
+COPY_EXISTING ~%CLERIC_HOLY_POWER%.spl~ ~override~ // sppr412, holy power
+              ~ohtmps1.spl~             ~override~ // holy power
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // duration is default 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // 1 hp/level bonus plus fighter thac0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      PATCH_IF level > 20 BEGIN SET thac0 = 0 END ELSE BEGIN SET thac0 = (21 - level) END // minimum thac0 is 0
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 18 BEGIN // max hp bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level
+        END ELSE  
+        PATCH_IF op = 54 BEGIN // fighter thac0
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) thac0
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_FAR_SIGHT%.spl~ ~override~ // sppr415, farsight
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) END // three rounds + 1 round/level  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_PRODUCE_FIRE%.spl~ ~override~ // sppr418, produce fire [iwdee/iwdspells]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 base_dmg_rolls = 1 damage_fixed = 1 END // damage is 1d4 + 1/level, no save
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_STATIC_CHARGE%.spl~ ~override~ // sppr419, static charge [iwdee/iwdspells]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) RET abil_delta END // this spell just sets the static charge condition
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 333 BEGIN // EEs
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // num hits
+          WRITE_LONG (fx_off + 0x1c + ((index2 + abil_fx_idx) * 0x30)) (level + 2) // dice thrown
+        END ELSE BEGIN
+          // tbd
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SPIRIT_FIRE%.spl~  ~override~ // sppr450, spirit fire
+              ~%CLERIC_SPIRIT_FIRE%b.spl~ ~override~ // sppr450b, [spirit fire double damage for spirits, fey creatures, elementals, and spectral undead]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 save_for_half = 1 END // damage is 1d4 per level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_FLAME_STRIKE%.spl~ ~override~ // sppr503, flame strike
+              ~sppr503d.spl~              ~override~ // [flame strike damage moved here w/ iwdspells]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 save_for_half = 1 END // damage is 1d8/level 
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_IRONSKIN%.spl~ ~override~ // sppr506, iron skins
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // no duration changes, just need headers for extra skins
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // extra skin every two levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 218 BEGIN // stoneskin
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 2) // num skins
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_CHAMPIONS_STRENGTH%.spl~ ~override~ // sppr507, champion's strength
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) RET abil_delta END // 3 rounds/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // +1 thac0 every three levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 54 BEGIN // thac0 bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 3) // thac0 bonus
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_CHAOTIC_COMMANDS%.spl~ ~override~ // sppr508, chaotic commands
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_MAGIC_RESISTANCE%.spl~ ~override~ // sppr509, magic resistance
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) RET abil_delta END // 3 rounds + 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // 2% MR per level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 166 BEGIN // MR
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (2 * level)
+        END
+      END     
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_GREATER_COMMAND%.spl~ ~override~ // sppr512, greater command
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_RIGHTEOUS_MAGIC%.spl~ ~override~ // sppr513, righteous magic
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // +1 STR every three levels, +1 hp every level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 44 BEGIN // str bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 3)
+        END ELSE
+        PATCH_IF op = 18 BEGIN // max hp bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level
+        END
+      END     
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_MASS_CURE%.spl~ ~override~ // sppr514, mass cure
+              ~bhaal1a.spl~            ~override~ // mass healing (unused?)
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 RET abil_delta END // no duration change, just need addt'l headers
+  PATCH_IF ("%SOURCE_RES%" STRING_COMPARE_CASE ~%CLERIC_MASS_CURE%~ = 0) BEGIN SET multiply = 1 END ELSE BEGIN SET multiply = 2 END
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // mass cure cures 1d8 + 1/level HP; bhaal1a heals 2d8 + 2/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 17 BEGIN // cur hp bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level * multiply)
+        END
+      END     
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_RIGHTEOUS_WRATH_OF_THE_FAITHFUL%a.spl~ ~override~ // righteous wrath of the faithful, matching alignment bonus
+              ~%CLERIC_RIGHTEOUS_WRATH_OF_THE_FAITHFUL%b.spl~ ~override~ // righteous wrath of the faithful, non-matching alignment bonus
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_MASS_CAUSE_LIGHT_WOUNDS%.spl~ ~override~ // sppr523, mass cause light wounds
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 base_dmg_rolls = 1 save_for_half = 1 END // damage is 1d8 + 1/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%ENEMY_CLERIC_SLAY_LIVING%.spl~ ~override~ // sppr599, slay living
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 1 base_dmg_rolls = 1 END // unlike player version, enemy slay living damage scales with level: damage is 1d8 + 1/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_AERIAL_SERVANT%.spl~ ~override~ // sppr601, aerial servant
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_CONJURE_FIRE_ELEMENTAL%.spl~ ~override~ // sppr605, conjure fire elemental
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_ENTROPY_SHIELD%.spl~ ~override~ // sppr615, entropy shield
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SPIRITUAL_LOCK%.spl~ ~override~ // sppr650, spiritual lock
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (10 * round) END // 1 turn + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SHIELD_OF_THE_ARCHONS%.spl~ ~override~ // sppr701, shield of the archons
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) RET abil_delta END // 3 rounds/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // spell deflection = 1 level/2 caster levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 201 BEGIN // spell deflection
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 2)
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // sppr702, conjure earth elemental
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_FIRE_STORM%.spl~ ~override~ // sppr705, fire storm
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 1 base_dmg_rolls = 2 RET abil_delta END // damage is 2d8 + 1/level (no save)
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SYMBOL_FEAR%.spl~ ~override~ // sppr706, symbol, fear
+              ~%CLERIC_SYMBOL_STUN%.spl~ ~override~ // sppr718, symbol, stun
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 3 END // two rounds + 1 round/3 caster levels
+  BUT_ONLY IF_EXISTS
+
+ACTION_IF FILE_EXISTS_IN_GAME ~%CLERIC_SUNRAY%a.spl~ BEGIN // undead damage farmed out to separate spell
+
+  COPY_EXISTING ~%CLERIC_SUNRAY%a.spl~ ~override~ // sppr707a, [subspell of sunray, scaling undead damage]
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 RET abil_delta END // damage is 1d6/level
+    BUT_ONLY IF_EXISTS
+    
+END ELSE BEGIN // otherwise still using theold eff system
+  
+  COPY_EXISTING ~%CLERIC_SUNRAY%.spl~ ~override~ // sppr707, sunray
+    // don't patch automatically
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 RET abil_delta END // just create new headers
+    PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+      // damage is 1d6/level
+      READ_LONG  0x64 abil_off
+      READ_SHORT 0x68 abil_num
+      READ_LONG  0x6a fx_off
+      FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+          READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) eff_file
+          PATCH_IF ((op = 177) AND ("%eff_file%" STRING_COMPARE_REGEXP "^sp707l[0-9]+$" = 0)) BEGIN // damage eff
+            PATCH_IF level < 10 BEGIN SET off = 0x1b END ELSE BEGIN SET off = 0x1a END
+            WRITE_ASCIIE (fx_off + off + ((index2 + abil_fx_idx) * 0x30)) ~%level%~
+          END
+        END
+      END  
+    END
+    BUT_ONLY IF_EXISTS
+
+  OUTER_FOR (index = 14 ; index <= cap ; ++index) BEGIN
+    ACTION_IF !FILE_EXISTS_IN_GAME ~sp707l%index%.eff~ BEGIN
+      COPY_EXISTING ~sp707l14.eff~ ~override/sp707l%index%.eff~
+        WRITE_LONG 0x38 index
+    END
+  END
+    
+END
+
+COPY_EXISTING ~%CLERIC_FINGER_OF_DEATH%.spl~ ~override~ // sppr708, finger of death
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 1 base_dmg_rolls = 2 RET abil_delta END // damage is 2d8 + 1/level (no save)
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_CONFUSION%.spl~ ~override~ // sppr709, confusion
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // 1 round/2 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_REGENERATE%.spl~ ~override~ // sppr711, regeneration
+              ~%CLERIC_WITHER%.spl~     ~override~ // sppr740, wither
+              ~bhaal1b.spl~             ~override~ // regeneration (unused?)
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // 1 round/2 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_ENERGY_BLADES%.spl~ ~override~ // sppr721, energy blades
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (40 * round) step_dur = 0 RET abil_delta END // static duration of four turns
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // one blade created/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // oddly, energy blades has full headers for levels 1-20
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_SUMMON_DEVA%.spl~        ~override~ // sppr726, summon deva
+              ~%CLERIC_SUMMON_FALLEN_DEVA%.spl~ ~override~ // sppr727, summon fallen deva
+              ~%PALADIN_SUMMON_DEVA%.spl~       ~override~ // spcl923, summon deva
+              ~spcl935.spl~                     ~override~ // summon fallen deva
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) END // four rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~%CLERIC_MASS_RAISE_DEAD%.spl~ ~override~ // sppr729, mass raise dead = no changes needed, just calls subspell a
+COPY_EXISTING ~%CLERIC_MASS_RAISE_DEAD%a.spl~ ~override~ // sppr729a, [subspell of mass raise dead]
+              ~%CLERIC_MASS_RAISE_DEAD%b.spl~ ~override~ // sppr729b, [subspell of mass raise dead]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 RET abil_delta END // no duration change, just need addt'l headers
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // cures 3d10 + 1/level HP - adjusted minus one for the dead folks since the resurrected start at 1 hp
+    PATCH_IF ("%SOURCE_RES%" STRING_COMPARE_CASE ~%CLERIC_MASS_RAISE_DEAD%a~ = 0) BEGIN SET malus = 1 END ELSE BEGIN SET malus = 0 END
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 17 BEGIN // cur hp bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level - malus)
+        END
+      END     
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_AURA_OF_FLAMING_DEATH%.spl~ ~override~ // sppr730, aura of flaming death
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // 1 round/2 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_IMPERVIOUS_SANCTITY_OF_MIND%.spl~ ~override~ // sppr735, impervious sanctity of mind
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS

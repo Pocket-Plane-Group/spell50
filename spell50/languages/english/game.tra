@@ -1,2 +1,2 @@
-@0 = ~DLC Merger is required before mods can be installed on this game. Check the readme for more information and a link to download DLC Merger.~
-@1 = ~Extend Many Spells to 50th Level~
+// this is bg2 string #32858, but replace the number--just the number--with %mr%. If it has a trailing %, leave that intact (like below)
+@1000 = ~Magic Resistance Lowered by %mr%%~ // for magic resistance spell

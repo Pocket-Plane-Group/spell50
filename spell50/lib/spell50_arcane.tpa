@@ -1,0 +1,1131 @@
+/////                                                  \\\\\
+///// mainline arcane spells                           \\\\\
+/////                                                  \\\\\
+
+COPY_EXISTING ~%WIZARD_GREASE%.spl~ ~override~ // spwi101, grease
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_BURNING_HANDS%.spl~ ~override~ // spwi103, burning hands
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 2 save_for_half = 1 RET abil_delta END // damage is 1d3 + 2/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_FRIENDS%.spl~ ~override~ // spwi107, friends
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) END // 4 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MAGIC_MISSILE%.spl~ ~override~ // spwi112, magic missile
+  // to overcome projectilelimitation, MM will now cast multiple versions of itself
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_size = 2 RET abil_delta END // fixed duration, extra missile every two levels
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // overcome projectile limitation by having spell cast itself
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      WRITE_SHORT (abil_off + 0x26 + (index * 0x28)) 1 // projectile: none
+      DELETE_BYTES (fx_off +        (abil_fx_idx * 0x30)) (abil_fx_num * 0x30) // delete existing effects
+      SET fx_delta -= abil_fx_num
+      SET abil_fx_num = 0
+      FOR (index2 = 0 ; index2 < ((level + 1) / 10) ; ++index2) BEGIN // one full cast for every 10 levels
+        INSERT_BYTES   (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 0x30
+          WRITE_SHORT  (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 146                      // cast spell
+          WRITE_BYTE   (fx_off + 0x02 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                        // target
+          WRITE_LONG   (fx_off + 0x04 + ((abil_fx_num + abil_fx_idx) * 0x30)) 9                        // level (5 missiles)
+          WRITE_LONG   (fx_off + 0x08 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                        // cast instantly at specified level
+          WRITE_BYTE   (fx_off + 0x0c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                        // timing
+          WRITE_BYTE   (fx_off + 0x12 + ((abil_fx_num + abil_fx_idx) * 0x30)) 100                      // probability
+          WRITE_ASCIIE (fx_off + 0x14 + ((abil_fx_num + abil_fx_idx) * 0x30)) ~%WIZARD_MAGIC_MISSILE%~ // cast working spell
+        SET fx_delta    += 1
+        SET abil_fx_num += 1
+      END  
+      PATCH_IF ((level + 1) MODULO 10) BEGIN // if we're not on a multiple of five missiles
+        INSERT_BYTES   (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 0x30
+          WRITE_SHORT  (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 146                           // cast spell
+          WRITE_BYTE   (fx_off + 0x02 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                             // target
+          WRITE_LONG   (fx_off + 0x04 + ((abil_fx_num + abil_fx_idx) * 0x30)) (((level + 1) MODULO 10) - 1) // leftover required missiles
+          WRITE_LONG   (fx_off + 0x08 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                             // cast instantly at specified level
+          WRITE_BYTE   (fx_off + 0x0c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                             // timing
+          WRITE_BYTE   (fx_off + 0x12 + ((abil_fx_num + abil_fx_idx) * 0x30)) 100                           // probability
+          WRITE_ASCIIE (fx_off + 0x14 + ((abil_fx_num + abil_fx_idx) * 0x30)) ~%WIZARD_MAGIC_MISSILE%~      // cast working spell
+        SET fx_delta    += 1
+        SET abil_fx_num += 1
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_EVIL%.spl~ ~override~ // spwi113, protection from evil
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
+  BUT_ONLY IF_EXISTS
+  
+ACTION_IF FILE_EXISTS_IN_GAME ~sgrasp.spl~ BEGIN // one item created with a scaling spell (eefp)
+
+  COPY_EXISTING ~sgrasp.spl~   ~override~ // spell from shocking grasp weapon (does the actual damage from sgrasp.itm)
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 1 base_dmg_rolls = 1 END // 1d8 + 1 damage/level
+    BUT_ONLY IF_EXISTS
+
+  COPY_EXISTING ~%WIZARD_SHOCKING_GRASP%.spl~ ~override~ // spwi115, shocking grasp
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR END // touch lasts one round/level
+    BUT_ONLY IF_EXISTS
+    
+END ELSE BEGIN // one item per spell level
+
+  COPY_EXISTING ~%WIZARD_SHOCKING_GRASP%.spl~ ~override~ // spwi115, shocking grasp
+    LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // touch lasts one round/level
+    PATCH_IF abil_delta <= 0 BEGIN
+      SET level = 0 // prevent item-creation loop below unless we extended spell
+    END ELSE BEGIN // if we added abilities 
+      SPRINT leading ~0~
+      READ_LONG  0x64 abil_off
+      READ_SHORT 0x68 abil_num
+      READ_LONG  0x6a fx_off
+      FOR (index = 0 ; index < abil_num ; ++index) BEGIN // start at existing abilities, as first hammer improvement should occur in old effects
+        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+          PATCH_IF op = 111 BEGIN // create weapon
+            PATCH_IF level > 9 BEGIN SPRINT leading ~~ END  
+            WRITE_ASCIIE (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) ~sgrasp%leading%%level%~ #8 // new hammer
+          END          
+        END  
+      END
+    END
+    BUT_ONLY IF_EXISTS
+  
+  OUTER_SPRINT leading ~0~
+  OUTER_FOR (index = 2 ; index < (level + 1) ; ++index) BEGIN // taking advantage that the highest-level hammer var is left over from above patch
+
+    ACTION_IF index > 9 BEGIN OUTER_SPRINT leading ~~ END
+    ACTION_IF !FILE_EXISTS_IN_GAME ~sgrasp%leading%%index%.itm~ BEGIN
+    
+      COPY_EXISTING ~sgrasp01.itm~ ~override/sgrasp%leading%%index%.itm~
+        LPF ALTER_EFFECT INT_VAR match_opcode = 12 parameter1 = index END // +x electrical damage
+    
+    END
+
+  END  
+    
+END
+
+COPY_EXISTING ~%WIZARD_SLEEP%.spl~ ~override~ // spwi116, sleep
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 5) END // 5 rounds/level
+  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~%WIZARD_CHROMATIC_ORB%.spl~ ~override~ // spwi118, chromatic orb
+//              ~spdr101.spl~                ~override~ // chromatic orb [avenger]
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_REFLECTED_IMAGE%.spl~ ~override~ // spwi120, reflected image
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~%WIZARD_SPOOK%.spl~ ~override~ // spwi125, spook
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_BLUR%.spl~ ~override~ // spwi201, blur
+              ~spdm102.spl~       ~override~ // blur
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) step_dur = (round * 2) END // 4 rounds + 2 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MELF_ACID_ARROW%.spl~ ~override~ // spwi211, melf's acid arrow
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 3 RET abil_delta END // add headers; durations are a mess so do manually
+  // add extra lingering acid damage for every header added  
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_acid = 0
+    SET base_dur = ((abil_num - abil_delta) * round)
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      SET add_acid += 1
+      SET add_acid_done = 0
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF op != 12 AND duration > 4 BEGIN // fix portrait icon duration
+          WRITE_LONG   (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (base_dur + (add_acid * round)) // duration
+        END  
+        PATCH_IF op = 12 AND !add_acid_done BEGIN // add extra acid damage opcodes
+          READ_ASCII   (fx_off +        ((index2 + abil_fx_idx) * 0x30)) acid (48)
+          SET add_acid_done = 1
+          FOR (index3 = 0 ; index3 < add_acid ; ++index3) BEGIN
+            INSERT_BYTES (fx_off +        ((index2 + abil_fx_idx) * 0x30)) 0x30
+            WRITE_ASCIIE (fx_off +        ((index2 + abil_fx_idx) * 0x30)) ~%acid%~ #48
+            WRITE_BYTE   (fx_off + 0x0c + ((index2 + abil_fx_idx) * 0x30)) 4 // timing
+            WRITE_LONG   (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (base_dur + ((index3 + 1) * round)) // duration
+            SET fx_delta += 1
+            SET abil_fx_num += 1
+            SET index2 += 1
+          END
+        END          
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%WIZARD_MIRROR_IMAGE%.spl~      ~override~ // spwi212, mirror image
+              ~ohbwi212.spl~                   ~override~ // mirror image
+              ~spdm106.spl~                    ~override~ // mirror image
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_STRENGTH%.spl~ ~override~ // spwi214, strength
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%WIZARD_RAY_OF_ENFEEBLEMENT%.spl~ ~override~ // spwi221, ray of enfeeblement
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CHAOS_SHIELD%.spl~ ~override~ // spwi222, chaos shield
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (round * 10) step_size = 5 END // 5 rounds + 1 turn/5 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%.spl~ ~override~ // spwi225, snilloc's snowball swarm
+  LPF CD_LEVEL_SELECT-O-MATIC END // all instant effects
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%b.spl~ ~override~ // spwi225b, [subspell of snilloc's snowball swarm, normal damage]
+              ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%c.spl~ ~override~ // spwi225c, [subspell of snilloc's snowball swarm, fire creature damage]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // does 1d6 or 1d3 per level; can patch together as we're only altering the dice number
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_DECASTAVE%.spl~ ~override~ // spwi226, decastave
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CATS_GRACE%.spl~ ~override~ // spwi227, cat's grace
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 300 END // "one hour" per level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CONTINGENCY_MIRROR_IMAGE%.spl~ ~override~ // spwi298, contingency – mirror image
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level - normal MI is 3rds + 1rd/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_FLAME_ARROW%.spl~ ~override~ // spwi303, flame arrow
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_size = 5 RET abil_delta END // all instant effects
+  // can't be automatically patched: gets an additional arrow every step, and every arrow has two damage ops for fire and piercing damage
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_arrow = 0
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      SET add_arrow += 1
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level (not starting at abil 0)
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < add_arrow ; ++index2) BEGIN
+        INSERT_BYTES (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 0x30
+        WRITE_SHORT  (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 12                 // damage
+        WRITE_BYTE   (fx_off + 0x02 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                  // target
+        WRITE_BYTE   (fx_off + 0x03 + ((abil_fx_num + abil_fx_idx) * 0x30)) 3                  // power
+        WRITE_SHORT  (fx_off + 0x0a + ((abil_fx_num + abil_fx_idx) * 0x30)) 16                 // piercing damage
+        WRITE_BYTE   (fx_off + 0x0c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // timing
+        WRITE_BYTE   (fx_off + 0x0d + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // dispel/not bypass MR
+        WRITE_BYTE   (fx_off + 0x12 + ((abil_fx_num + abil_fx_idx) * 0x30)) 100                // probability
+        WRITE_LONG   (fx_off + 0x1c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // two rolls
+        WRITE_LONG   (fx_off + 0x20 + ((abil_fx_num + abil_fx_idx) * 0x30)) 6                  // four-sided die
+        INSERT_BYTES (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 0x30
+        WRITE_SHORT  (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 12                 // damage
+        WRITE_BYTE   (fx_off + 0x02 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                  // target
+        WRITE_BYTE   (fx_off + 0x03 + ((abil_fx_num + abil_fx_idx) * 0x30)) 3                  // power
+        WRITE_SHORT  (fx_off + 0x0a + ((abil_fx_num + abil_fx_idx) * 0x30)) 8                  // fire damage
+        WRITE_BYTE   (fx_off + 0x0c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // timing
+        WRITE_BYTE   (fx_off + 0x0d + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // dispel/not bypass MR
+        WRITE_BYTE   (fx_off + 0x12 + ((abil_fx_num + abil_fx_idx) * 0x30)) 100                // probability
+        WRITE_LONG   (fx_off + 0x20 + ((abil_fx_num + abil_fx_idx) * 0x30)) 6                  // six-sided die
+        WRITE_LONG   (fx_off + 0x24 + ((abil_fx_num + abil_fx_idx) * 0x30)) BIT0               // save vs. spell
+        PATCH_IF enhanced_edition BEGIN // go 4d6 with save for half
+          WRITE_LONG   (fx_off + 0x1c + ((abil_fx_num + abil_fx_idx) * 0x30)) 4                  // four rolls
+          WRITE_LONG   (fx_off + 0x2c + ((abil_fx_num + abil_fx_idx) * 0x30)) BIT8               // save for half-damage
+          SET fx_delta    += 2
+          SET abil_fx_num += 2
+        END ELSE BEGIN // or 2d6 with another effect for 2d6 no-save
+          WRITE_LONG   (fx_off + 0x1c + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                  // two rolls
+          INSERT_BYTES (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 0x30
+          WRITE_SHORT  (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30)) 12                 // damage
+          WRITE_BYTE   (fx_off + 0x02 + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                  // target
+          WRITE_BYTE   (fx_off + 0x03 + ((abil_fx_num + abil_fx_idx) * 0x30)) 3                  // power
+          WRITE_SHORT  (fx_off + 0x0a + ((abil_fx_num + abil_fx_idx) * 0x30)) 8                  // fire damage
+          WRITE_BYTE   (fx_off + 0x0c + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // timing
+          WRITE_BYTE   (fx_off + 0x0d + ((abil_fx_num + abil_fx_idx) * 0x30)) 1                  // dispel/not bypass MR
+          WRITE_BYTE   (fx_off + 0x12 + ((abil_fx_num + abil_fx_idx) * 0x30)) 100                // probability
+          WRITE_LONG   (fx_off + 0x1c + ((abil_fx_num + abil_fx_idx) * 0x30)) 2                  // two rolls
+          WRITE_LONG   (fx_off + 0x20 + ((abil_fx_num + abil_fx_idx) * 0x30)) 6                  // four-sided die
+          SET fx_delta    += 3
+          SET abil_fx_num += 3
+        END  
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_FIREBALL%.spl~ ~override~ // spwi304, fireball
+              ~ohbwi304.spl~          ~override~ // fireball
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // does 1d6 per level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_HASTE%.spl~ ~override~ // spwi305, haste
+              ~%MAZZY_HASTE%.spl~  ~override~ // spin828, haste
+              ~spra301.spl~        ~override~ // haste [stalker]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_LIGHTNING_BOLT%.spl~   ~override~ // spwi308, lightning bolt
+              ~%TALOS_LIGHTNING_BOLT%.spl~    ~override~ // spcl722, lightning bolt
+              ~%BEHOLDER_LIGHTNING_BOLT%.spl~ ~override~ // spin989, lightning bolt
+              ~cdstaf12.spl~                  ~override~ // lightning bolt of paralyzation (staff of power)
+//            ~ohbwi308.spl~                  ~override~ // lightning bolt - damage is all over the place
+              ~spwi399.spl~                   ~override~ // lightning bolt (uses fire storm projectile, but scales as lightning bolt)
+              ~spdr301.spl~                   ~override~ // lightning bolt [avenger]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 damage_rolls = 1 save_for_half = 1 END // does 1d6 per level, set min_dir so it doesn't mess up static stun on cdstaf12
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_1%.spl~ ~override~ // spwi309, monster summoning i
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) END // two rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SKULL_TRAP%.spl~ ~override~ // spwi313, skull trap
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // does 1d6 per level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_VAMPIRIC_TOUCH%.spl~ ~override~ // spwi314, vampiric touch
+              ~%INNATE_VAMPIRIC_TOUCH%.spl~ ~override~ // spin106, vampiric touch
+              ~spdm108.spl~                 ~override~ // vampiric touch
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // one hour, fixed
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // cast subspell 
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level (in this case we want level 1 from header 0)
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 146 BEGIN // cast subspell
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // cast subspell at level matching header level
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_VAMPIRIC_TOUCH%a.spl~ ~override~ // spwi314a, [subspell of vampiric touch]
+              ~%INNATE_VAMPIRIC_TOUCH%a.spl~ ~override~ // spin106a, [subspell of vampiric touch]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = 300 step_dur = 0 step_size = 2 damage_special = 1 damage_rolls = 1 END // one hour, fixed; does 1d6 per two levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_VAMPIRIC_TOUCH%b.spl~ ~override~ // spwi314a, [subspell of vampiric touch] - seems unused, extend anyway
+              ~%INNATE_VAMPIRIC_TOUCH%b.spl~ ~override~ // spin106b, [subspell of vampiric touch]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = 300 step_dur = 0 step_size = 2 RET abil_delta END // one hour, fixed
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_arrow = 0
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      SET add_arrow += 1
+      PATCH_IF !index BEGIN                                        // first header level is always artificially set to 1
+        READ_SHORT  (abil_off + 0x10 + ((index + 1) * 0x28)) level // read level from second header
+        SET level -= 2                                             // and adjust
+      END ELSE BEGIN                                               // otherwise
+        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      END
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 18 BEGIN // max HP bonus
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (THIS + (6 * add_arrow))
+        END
+      END
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_WRAITH_FORM%.spl~ ~override~ // spwi315, wraithform
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MINOR_SPELL_DEFLECTION%.spl~ ~override~ // spwi318, minor spell deflection
+              ~spra302.spl~                         ~override~ // minor spell deflection [stalker]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_FIRE%.spl~ ~override~ // spwi319, protection from fire
+              ~%WIZARD_PROTECTION_FROM_COLD%.spl~ ~override~ // spwi320, protection from cold
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_HOLD_UNDEAD%.spl~    ~override~ // spwi324, hold undead
+              ~%LATHANDER_HOLD_UNDEAD%.spl~ ~override~ // spcl742, hold undead
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MELF_METEOR%.spl~ ~override~ // spwi325, melf's minute meteors
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // all instant effects
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // one meteor created/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_LANCE_OF_DISRUPTION%.spl~ ~override~ // spwi327, lance of disruption
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 2 base_dmg_rolls = 5 save_for_half = 1 END // damage is 5d4 + 2/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONFUSION%.spl~ ~override~ // spwi401, confusion
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 6 END // 5 rounds + 1 round/6 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_FIRE_SHIELD_BLUE%.spl~ ~override~ // spwi403, fire shield (blue)
+              ~%WIZARD_FIRE_SHIELD_RED%.spl~  ~override~ // spwi418, fire shield (red)
+              ~%SUN_SOUL_GREATER_SUN%.spl~    ~override~ // spcl237, greater sun
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_IMPROVED_INVISIBILITY%.spl~   ~override~ // spwi405, improved invisibility
+              ~%WIZARD_IMPROVED_INVISIBILITY%a.spl~  ~override~ // spwi405, save subspell of improved invisibility [obg2]
+              ~%PSIONIC_SUPERIOR_INVISIBILITY%.spl~  ~override~ // spin544, improved invisibility
+              ~%PSIONIC_SUPERIOR_INVISIBILITY%a.spl~ ~override~ // spin544, save subspell of improved invisibility [obg2]
+              ~ohbwi405.spl~                         ~override~ // improved invisibility
+              ~spdr401.spl~                          ~override~ // improved invisibility [avenger]
+              ~spdr401a.spl~                         ~override~ // save subspell of improved invisibility [avenger, obg2]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MINOR_GLOBE_OF_INVULNERABILITY%.spl~ ~override~ // spwi406, minor globe of invulnerability
+              ~%WISH_GLOBE%.spl~                            ~override~ // spin736, wish
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_2%.spl~ ~override~ // spwi407, monster summoning ii
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_STONE_SKIN%.spl~ ~override~ // spwi408, stoneskin
+              ~%DRAGON_STONE_SKIN%.spl~ ~override~ // spin694, stoneskin
+              ~ohwi408.spl~             ~override~ // <no text>
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // no duration changes, just need headers for extra skins
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // extra skin every two levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 218 BEGIN // stoneskin
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 2) // num skins
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_EMOTION_HOPELESSNESS%.spl~ ~override~ // spwi411, emotion: hopelessness
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) END // 9 rounds + 1 round/level after 7th (basically 2 rounds + 1 round/level)
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_GREATER_MALISON%.spl~ ~override~ // spwi412, greater malison
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_POLYMORPH_SELF%.spl~ ~override~ // spwi416, polymorph self
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 10) step_dur = (round * 3) END // 1 turn + 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_ENCHANTED_WEAPON%.spl~ ~override~ // spwi417, enchanted weapon
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 5) END // 5 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_BELTYNS_BURNING_BLOOD%.spl~ ~override~ // spwi422, beltyn's burning blood (also uses #beltyn, but that only has one header)
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (round * 1) step_size = 2 RET abil_delta END // 1 round/2 levels
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // gets another op333 every two levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 333 BEGIN // static charge
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 2) // number of 333 repeats
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SPIDER_SPAWN%.spl~ ~override~ // spwi423, spider spawn
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 6) END // 6 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_FAR_SIGHT%.spl~ ~override~ // spwi424, farsight
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%WIZARD_EYE%.spl~ ~override~ // spwi425, wizard eye
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MORDENKAINENS_FORCE_MISSILES%.spl~ ~override~ // spwi429, mordenkainen's force missiles
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // all instant durations
+  // can't do automatically as projectile and subspell need to change
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    READ_SHORT  (abil_off + 0x26) proj                       // read initial MFM projectile from base header
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level // we want the min level since we're only using level to cast subspell
+      PATCH_IF index BEGIN                                        
+        PATCH_IF level > 37 BEGIN SET new_proj = proj + 10 END ELSE BEGIN SET new_proj = (((level - 7) / 3) + proj) END // cap at 10th iterative projectile
+        WRITE_SHORT (abil_off + 0x26 + (index * 0x28)) new_proj // iterate projectile every 3 levels
+      END
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 333 BEGIN // static charge
+          WRITE_LONG (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) level // cast subspell at matching header
+        END 
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MORDENKAINENS_FORCE_MISSILES%b.spl~ ~override~ // spwi429b, [subspell of mordenkainen's force missiles, concussion damage]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 END // +1 damage per level, save negates
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%.spl~ ~override~ // spwi431, vitriolic sphere
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // just need new headers
+  // can't be done automatically as acid damage decays and has weird save system
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF ((op = 12) OR (op = 326)) BEGIN // damage, apply spell effect list
+          READ_BYTE  (fx_off + 0x0c + ((index2 + abil_fx_idx) * 0x30)) timing
+          PATCH_IF timing = 4 BEGIN
+            DELETE_BYTES (fx_off +        ((index2 + abil_fx_idx) * 0x30)) 0x30 
+            SET fx_delta    -= 1
+            SET abil_fx_num -= 1
+            SET index2      -= 1
+          END ELSE   
+          PATCH_IF op = 12 BEGIN // damage
+            WRITE_LONG (fx_off + 0x1c + ((index2 + abil_fx_idx) * 0x30)) level // update damage die for instant damage
+          END        
+        END  
+      END  
+      SET insert_point = (fx_off +        ((abil_fx_num + abil_fx_idx) * 0x30))
+      FOR (index3 = (((level + 1) / 2) - 1) ; index3 > 0 ; --index3) BEGIN
+        PATCH_IF index3 != (((level + 1) / 2) - 1) BEGIN // if we're not on the first loop
+          INSERT_BYTES (insert_point       ) 0x30
+          WRITE_SHORT  (insert_point       ) 326                  // apply effects list
+          WRITE_BYTE   (insert_point + 0x02) 2                    // target
+          WRITE_BYTE   (insert_point + 0x03) 4                    // power
+          WRITE_BYTE   (insert_point + 0x0c) 4                    // timing
+          WRITE_BYTE   (insert_point + 0x0d) 1                    // dispel/not bypass MR
+          WRITE_LONG   (insert_point + 0x0e) (6 * index3)         // duration
+          WRITE_BYTE   (insert_point + 0x12) 100                  // probability
+          WRITE_ASCIIE (insert_point + 0x14) ~%WIZARD_VITRIOLIC_SPHERE%z~ // spell
+          SET fx_delta    += 1
+          SET abil_fx_num += 1
+        END  
+        INSERT_BYTES (insert_point       ) 0x30
+        WRITE_SHORT  (insert_point       ) 12                     // damage
+        WRITE_BYTE   (insert_point + 0x02) 2                      // target
+        WRITE_BYTE   (insert_point + 0x03) 4                      // power
+        WRITE_SHORT  (insert_point + 0x0a) 1                      // acid damage
+        WRITE_BYTE   (insert_point + 0x0c) 4                      // timing
+        WRITE_BYTE   (insert_point + 0x0d) 1                      // dispel/not bypass MR
+        WRITE_LONG   (insert_point + 0x0e) (6 * index3)           // duration
+        WRITE_BYTE   (insert_point + 0x12) 100                    // probability
+        WRITE_LONG   (insert_point + 0x1c) (level - (index3 * 2)) // decreases 2 dice every round
+        WRITE_LONG   (insert_point + 0x20) 4                      // four-sided die
+        SET fx_delta    += 1
+        SET abil_fx_num += 1
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%y.spl~ ~override~ // spwi431y, [subspell of vitriolic sphere: splash damage]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 5 damage_special = 1 damage_rolls = 1 RET abil_delta END // +1d4/5 levels, save negates
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SHADOW_MONSTERS%.spl~ ~override~ // spwi432, shadow monsters
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~%WIZARD_ANIMATE_DEAD%.spl~ ~override~ // spwi501, animate dead
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONE_OF_COLD%.spl~ ~override~ // spwi503, cone of cold
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 damage_rolls = 1 END // does 1d4+1 per level (dice and bonus scale)
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_3%.spl~ ~override~ // spwi504, monster summoning iii
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) END // 4 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SHADOW_DOOR%.spl~  ~override~ // spwi505, shadow door
+              ~%WIZARD_SHADOW_DOOR%a.spl~ ~override~ // spwi505, save subspell of shadow door [obg2]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 9 rounds + 1 round/level after 9th (effectively 1 round/level)
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_HOLD_MONSTER%.spl~ ~override~ // spwi507, hold monster
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CHAOS%.spl~ ~override~ // spwi508, chaos
+              ~spdr501.spl~        ~override~ // chaos [avenger]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 6 END // 5 rounds + 1 round/6 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_NORMAL_WEAPONS%.spl~ ~override~ // spwi511, protection from normal weapons
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_ELECTRICITY%.spl~ ~override~ // spwi512, protection from electricity
+              ~%WIZARD_PROTECTION_FROM_ACID%.spl~        ~override~ // spwi517, protection from acid
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_LOWER_RESISTANCE%.spl~ ~override~ // spwi514, lower resistance
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 9 rounds + 1 round/level after 9th (effectively 1 round/level)
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // 10% mr reduction +1/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      SET mr = (level + 10)
+      SPRINT mr_string @1000
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 166 BEGIN // magic resistance
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (0 - mr)
+        END ELSE  
+        PATCH_IF op = 139 BEGIN // dsiplay string
+          SAY_EVALUATED (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) ~%mr_string%~
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONJURE_LESSER_FIRE_ELEMENTAL%.spl~  ~override~ // spwi516, conjure lesser fire elemental
+              ~%WIZARD_CONJURE_LESSER_AIR_ELEMENTAL%.spl~   ~override~ // spwi520, conjure lesser air elemental
+              ~%WIZARD_CONJURE_LESSER_EARTH_ELEMENTAL%.spl~ ~override~ // spwi521, conjure lesser earth elemental
+              ~%WIZARD_CONJURE_LESSER_WATER_ELEMENTAL%.spl~ ~override~ // spwi526, conjure lesser water elemental
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 18 base_dur = (round * 10) RET abil_delta END // 1 turn + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PHANTOM_BLADE%.spl~ ~override~ // spwi518, phantom blade
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SPELL_SHIELD%.spl~ ~override~ // spwi519, spell shield
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) RET abil_delta END // 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MINOR_SPELL_TURNING%.spl~ ~override~ // spwi522, minor spell turning
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) RET abil_delta END // 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUN_FIRE%.spl~  ~override~ // spwi523, sunfire
+              ~%WIZARD_SUN_FIRE%d.spl~ ~override~ // spwi523d, [subspell of sunfire, ee]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // 1d6/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%.spl~ ~override~ // spwi524, shroud of flame
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // just need new headers
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_333 = 0
+    READ_SHORT  (abil_off + 0x10 + (((abil_num - (abil_delta + 1)) * 0x28))) prev_level       // just read the level (not starting at abil 0)
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      SET add_333 += 1
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level (not starting at abil 0)
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF (op = 333) BEGIN
+          READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) resource
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "%WIZARD_SHROUD_OF_FLAME%c" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 2) // update # hits
+          END ELSE  
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "#soflamc" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) ((level / 2) * round) // update # hits
+          END ELSE  
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "%WIZARD_SHROUD_OF_FLAME%b" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) (((level - prev_level) / 2) + THIS) // increase caster level
+            READ_ASCII  (fx_off +        ((index2 + abil_fx_idx) * 0x30)) template (48)
+            SET insert_point = (fx_off +        ((index2 + abil_fx_idx + 1) * 0x30))
+          END  
+        END ELSE // for all non-333s
+        PATCH_IF (duration > 4) BEGIN // portrait icon, spell state 
+          WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) ((level / 2) * round)
+        END   
+      END  
+      FOR (index3 = 1 ; index3 <= add_333 ; ++index3) BEGIN
+        INSERT_BYTES (insert_point       ) 0x30
+        WRITE_ASCIIE (insert_point       ) ~%template%~ #48                       // copy in existing 333
+        WRITE_LONG   (insert_point + 0x08) index3                                 // cast at level
+        WRITE_LONG   (insert_point + 0x0e) ((((level / 2) - index3) * round) - 3) // duration
+        SET fx_delta    += 1
+        SET abil_fx_num += 1
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%b.spl~ ~override~ // spwi524b, [subspell of shroud of flame]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // just need new headers
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_333 = 0
+    READ_SHORT  (abil_off + 0x10 + (((abil_num - (abil_delta + 1)) * 0x28))) prev_level       // just read the level (not starting at abil 0)
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      SET add_333 += 1
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level (not starting at abil 0)
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF (op = 333) BEGIN
+          READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) resource
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "%WIZARD_SHROUD_OF_FLAME%c" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // update # hits
+          END ELSE  
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "#soflamc" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level * round) // update # hits
+          END ELSE  
+          PATCH_IF ("%resource%" STRING_COMPARE_CASE "%WIZARD_SHROUD_OF_FLAME%b" = 0) BEGIN // damage, apply spell effect list
+            WRITE_LONG  (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) ((level - prev_level) + THIS) // increase caster level
+            READ_ASCII  (fx_off +        ((index2 + abil_fx_idx) * 0x30)) template (48)
+            SET insert_point = (fx_off +        ((index2 + abil_fx_idx + 1) * 0x30))
+          END  
+        END ELSE // for all non-333s
+        PATCH_IF (duration > 4) BEGIN // portrait icon, spell state 
+          WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (level * round)
+        END   
+      END  
+      FOR (index3 = 1 ; index3 <= add_333 ; ++index3) BEGIN
+        INSERT_BYTES (insert_point       ) 0x30
+        WRITE_ASCIIE (insert_point       ) ~%template%~ #48                       // copy in existing 333
+        WRITE_LONG   (insert_point + 0x08) index3                                 // cast at level
+        WRITE_LONG   (insert_point + 0x0e) (((level - index3) * round) - 3) // duration
+        SET fx_delta    += 1
+        SET abil_fx_num += 1
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUMMON_SHADOW%.spl~ ~override~ // spwi525, summon shadow
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) END // 1 round + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_DEMI_SHADOW_MONSTERS%.spl~ ~override~ // spwi527, demi-shadow monsters
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SPELL_IMMUNITY_ABJURATION%.spl~  ~override~ // spwi590, immunity: abjuration
+              ~%WIZARD_SPELL_IMMUNITY_CONJURATION%.spl~ ~override~ // spwi591, immunity: conjuration
+              ~%WIZARD_SPELL_IMMUNITY_DIVINATION%.spl~  ~override~ // spwi592, immunity: divination
+              ~%WIZARD_SPELL_IMMUNITY_ENCHANTMENT%.spl~ ~override~ // spwi593, immunity: enchantment
+              ~%WIZARD_SPELL_IMMUNITY_ILLUSIONIST%.spl~ ~override~ // spwi594, immunity: illusion
+              ~%WIZARD_SPELL_IMMUNITY_INVOCATION%.spl~  ~override~ // spwi595, immunity: evocation
+              ~%WIZARD_SPELL_IMMUNITY_NECROMANCY%.spl~  ~override~ // spwi596, immunity: necromancy
+              ~%WIZARD_SPELL_IMMUNITY_ALTERATION%.spl~  ~override~ // spwi597, immunity: alteration
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_GLOBE_OF_INVULNERABILITY%.spl~ ~override~ // spwi602, globe of invulnerability
+              ~jwglobe.spl~                           ~override~ // globe of invulnerability
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_TENSERS_TRANSFORMATION%.spl~ ~override~ // spwi603, tenser's transformation
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // base thac0 improves 1/level to a max of 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_SHORT (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) p2
+        PATCH_IF ((op = 54) AND (p2 = 1)) BEGIN // thac0 set
+          PATCH_IF level > 20 BEGIN SET thac0 = 0 END ELSE BEGIN SET thac0 = (21 - level) END
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) thac0
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_MAGIC_ENERGY%.spl~ ~override~ // spwi606, protection from magic energy
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MISLEAD%.spl~  ~override~ // spwi607, mislead
+              ~%WIZARD_MISLEAD%a.spl~ ~override~ // spwi607a, save subspell of mislead [obg2]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PIERCE_MAGIC%.spl~ ~override~ // spwi608, pierce magic
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // duration is a round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // mr reduction +1/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 166 BEGIN // magic resistance
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (0 - level)
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_4%.spl~ ~override~ // spwi610, monster summoning iv
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 5) END // 5 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_IMPROVED_HASTE%.spl~ ~override~ // spwi613, improved haste
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CHAIN_LIGHTNING%.spl~ ~override~ // spwi615, chain lightning
+              ~spdr601.spl~                  ~override~ // chain lightning [avenger]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_special = 1 damage_rolls = 1 save_for_half = 1 step_size = 2 END // 1d6/2 levels, save for half
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONTINGENCY%.spl~ ~override~ // spwi617, contingency
+  PATCH_IF cap > 26 BEGIN SET cont_cap = 27 END ELSE BEGIN SET cont_cap = cap END
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_size = 3 level_cap = cont_cap RET abil_delta END
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // can add higher level spell to the contingency every 3 levels
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 234 BEGIN // contingency
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (level / 3)
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SPELL_DEFLECTION%.spl~ ~override~ // spwi618, spell deflection
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_WYVERN_CALL%.spl~ ~override~ // spwi619, wyvern call
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONJURE_FIRE_ELEMENTAL%.spl~  ~override~ // spwi620, conjure fire elemental
+              ~%WIZARD_CONJURE_AIR_ELEMENTAL%.spl~   ~override~ // spwi621, conjure air elemental
+              ~%WIZARD_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // spwi622, conjure earth elemental
+              ~%WIZARD_CONJURE_WATER_ELEMENTAL%.spl~ ~override~ // spwi633, conjure water elemental
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 18 step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CARRION%.spl~ ~override~ // spwi623, carrion summons
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 7) END // 7 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUMMON_NISHRUU%.spl~ ~override~ // spwi624, summon nishruu
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_OTILUKES_FREEZING_SPHERE%.spl~ ~override~ // spwi626, otiluke's freezing sphere
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 damage_fixed = 2 END // does 1d4+2/level (roll and fixed scale), save negates
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_ANTIMAGIC_SHELL%.spl~ ~override~ // spwi630, antimagic shell
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_LICH_TOUCH%.spl~ ~override~ // spwi631, lich touch
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SHADES%.spl~ ~override~ // spwi632, shades
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SPELL_TURNING%.spl~ ~override~ // spwi701, spell turning
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_THE_ELEMENTS%.spl~ ~override~ // spwi702, protection from the elements
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROJECT_IMAGE%.spl~ ~override~ // spwi703, project image
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_ACID_STORM%.spl~ ~override~ // spwi706, acid storm
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // add headers; durations are a mess so do manually
+  // gets an extra 1d8 delayed damage every round
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    SET fx_delta = 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    SET add_acid = 0 
+    READ_SHORT  (abil_off + 0x10 + ((abil_num - (abil_delta + 1)) * 0x28)) orig_level       // just read the level
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      WRITE_SHORT (abil_off + 0x20 + (index * 0x28)) (THIS + fx_delta)
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      SET add_acid += 1
+      SET add_acid_done = 0
+      FOR (index2 = (abil_fx_num - 1) ; index2 >= 0 ; --index2) BEGIN // grab *last* acid damage
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF op = 12 AND !add_acid_done BEGIN // add extra acid damage opcodes
+          READ_ASCII   (fx_off +        ((index2 + abil_fx_idx) * 0x30)) acid (48)
+          SET add_acid_done = 1
+          FOR (index3 = add_acid ; index3 > 0 ; --index3) BEGIN
+            INSERT_BYTES (fx_off +        ((index2 + abil_fx_idx + 1) * 0x30)) 0x30
+            WRITE_ASCIIE (fx_off +        ((index2 + abil_fx_idx + 1) * 0x30)) ~%acid%~ #48
+            WRITE_LONG   (fx_off + 0x0e + ((index2 + abil_fx_idx + 1) * 0x30)) ((orig_level + index3 - 1) * round) // duration
+            SET fx_delta += 1
+            SET abil_fx_num += 1
+          END
+          SET index2 = "-1" // kill loop 
+        END          
+      END  
+      WRITE_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MORDENKAINENS_SWORD%.spl~ ~override~ // spwi716, mordenkainen's sword
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUMMON_EFREET%.spl~    ~override~ // spwi717, summon efreeti
+              ~%WIZARD_SUMMON_HAKEASHAR%.spl~ ~override~ // spwi719, summon hakeashar
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 8) END // 8 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUMMON_DJINNI%.spl~ ~override~ // spwi718, summon djinni
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_CONTROL_UNDEAD%.spl~ ~override~ // spwi720, control undead
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 6) END // 6 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MASS_INVISIBILITY%.spl~  ~override~ // spwi721, mass invisibility
+              ~%WIZARD_MASS_INVISIBILITY%a.spl~ ~override~ // spwi721, save subspell of mass invisibility [obg2]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_5%.spl~ ~override~ // spwi725, monster summoning v
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 6) END // 6 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MORDENKAINENS_SWORD_IWD%.spl~ ~override~ // spwi726, mordenkainen's force blade
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // base thac0 improves by one every 2 levels to a max of 0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_SHORT (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) p2
+        PATCH_IF ((op = 54) AND (p2 = 1)) BEGIN // thac0 set
+          PATCH_IF level > 41 BEGIN SET thac0 = 0 END ELSE BEGIN SET thac0 = (21 - (level / 2)) END
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) thac0
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_ENERGY%.spl~ ~override~ // spwi803, protection from energy
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SIMULACRUM%.spl~ ~override~ // spwi804, simulacrum
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_PIERCE_SHIELD%.spl~ ~override~ // spwi805, pierce shield
+  LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // 10% mr reduction +1/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      SET mr = (level + 10)
+      SPRINT mr_string @1000
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 166 BEGIN // magic resistance
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) (0 - mr)
+        END ELSE  
+        PATCH_IF op = 139 BEGIN // dsiplay string
+          SAY_EVALUATED (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) ~%mr_string%~
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_INCENDIARY_CLOUD%.spl~ ~override~ // spwi810, incendiary cloud
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // 1d4 damage/level, save for half
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SYMBOL_FEAR%.spl~ ~override~ // spwi811, symbol, fear
+              ~%WIZARD_SYMBOL_STUN%.spl~ ~override~ // spwi816, symbol, stun
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (round * 1) step_size = 3 RET abil_delta END // 2 rounds + 1 round/3 levels
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_ABI_DALZIMS_HORRID_WILTING%.spl~ ~override~ // spwi812, abi-dalzim's horrid wilting
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // 1d8 damage/level, save for half
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_6%.spl~ ~override~ // spwi821, monster summoning vi
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 7) END // 7 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_NPC_SYMBOL_STUN%.spl~ ~override~ // spwi898, symbol, stun
+              ~%WIZARD_NPC_SYMBOL_FEAR%.spl~ ~override~ // spwi899, symbol, fear
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_7%.spl~ ~override~ // spwi901, monster summoning vii
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 8) END // 8 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_ENERGY_BLADES%.spl~ ~override~ // spwi920, energy blades
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (40 * round) step_dur = 0 RET abil_delta END // static duration of four turns
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // one blade created/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // oddly, energy blades has full headers for levels 1-20
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_SUMMON_PLANATAR_GOOD%.spl~ ~override~ // spwi923, summon planetar
+              ~%WIZARD_SUMMON_PLANATAR_EVIL%.spl~ ~override~ // spwi924, summon dark planetar
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) END // 4 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS

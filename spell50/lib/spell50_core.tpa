@@ -1,0 +1,19 @@
+// iwd uses a base round value of 7, not 6 like bg/bg2
+OUTER_SET round = 6
+ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SET round = 7 END
+
+// for the originals, spells with save-for-half damage have to have two damage opcodes whereas ee has one.
+// most of the time we have to adjust both op 12s on obg2 separately, but sometimes we can unify the 
+// ee/obg2 code by using this divisor
+OUTER_SET damage_divisor = 2 - enhanced_edition // =1 on EE, =2 on !EE
+
+INCLUDE ~spell50/lib/functions.tpa~      // functions that do the work
+INCLUDE ~spell50/lib/spell50_arcane.tpa~ // mainline arcane spells
+INCLUDE ~spell50/lib/spell50_divine.tpa~ // mainline divine spells
+INCLUDE ~spell50/lib/spell50_misc.tpa~   // other spells
+
+<<<<<<<<./inline/tpa.tpa
+OUTER_SET spell50_cap = %cap%
+>>>>>>>>
+
+COPY + ~./inline/tpa.tpa~ ~weidu_external/spell50/spell50_cap.tpa~ EVALUATE_BUFFER
