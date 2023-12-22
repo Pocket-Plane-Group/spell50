@@ -388,7 +388,7 @@ DEFINE_PATCH_FUNCTION CD_EXTEND-O-MATIC
           base_dmg_fixed = 0     // base fixed damage
           damage_rolls   = 0     // +die roll damage per level
           damage_fixed   = 0     // +fixed damage per level
-          save_for_half  = 0     // if we need to split damage for non-ee
+          save_for_half  = 0     // if we need to split damage for non-ee: 0=no split, 1=split with odd totals going to no-save half, 2=split with odd totals going to save half
           damage_special = 0     // just add damage_rolls/damage_fixed to existing effects (ignore base_dmg_rolls, base_dmg_fixed)
   RET     abil_delta
 BEGIN
@@ -398,6 +398,16 @@ BEGIN
   READ_SHORT 0x68 abil_num
   READ_LONG  0x6a fx_off
   READ_SHORT (abil_off + 0x10 + (0x28 * (abil_num - 1))) min_lev // read level of last ability
+  // fudge factor is to determine which half of damage gets the full die when adding 1 per level
+  SET save_fudge_fixed = 0 SET save_fudge_rolls = 0 SET nonsave_fudge_fixed = 0 SET nonsave_fudge_rolls = 0
+  PATCH_IF save_for_half BEGIN  
+    PATCH_MATCH save_for_half WITH
+      2 BEGIN SET save_fudge_fixed = 1 SET save_fudge_rolls = 1 END
+      3 BEGIN SET save_fudge_rolls = 1 SET nonsave_fudge_fixed = 1 END
+      4 BEGIN SET save_fudge_fixed = 1 SET nonsave_fudge_rolls = 1  END
+      DEFAULT SET nonsave_fudge_fixed = 1 SET nonsave_fudge_rolls = 1 // 1, or non-valid
+    END
+  END    
   PATCH_IF ((min_lev = 1) AND (min_lev_alt != 0)) BEGIN SET min_lev = min_lev_alt END
   FOR (index = min_lev + step_size ; index < (level_cap + 1) ; index = index + step_size) BEGIN
     READ_ASCII (abil_off +        (0x28 * (abil_num - 1))) abil (0x28) // read entire ability
@@ -406,6 +416,11 @@ BEGIN
     READ_ASCII (fx_off +        (0x30 * abil_fx_idx)) effects (abil_fx_num * 0x30) // read entire fx block
     INSERT_BYTES (fx_off +        (0x30 * (abil_fx_idx + abil_fx_num))) (abil_fx_num * 0x30) // insert bytes for new ability
     WRITE_ASCIIE (fx_off +        (0x30 * (abil_fx_idx + abil_fx_num))) "%effects%"          // write in effects block
+    // if damage_special & save_for_half, we use the first loop only to gather total damage between the split damage opcodes, then use it in a second loop
+    PATCH_IF damage_special BEGIN
+      SET special_fixed = 0  
+      SET special_rolls = 0 
+    END  
     FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
       READ_BYTE (fx_off + 0x0c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) timing
       READ_LONG (fx_off + 0x0e + (0x30 * (abil_fx_idx + abil_fx_num + index2))) duration
@@ -422,26 +437,19 @@ BEGIN
         SET new_rolls = (base_dmg_rolls + (index * damage_rolls))
         READ_SHORT (fx_off +        (0x30 * (abil_fx_idx + abil_fx_num + index2))) opcode
         PATCH_IF opcode = 12 BEGIN // damage
-          READ_SHORT (fx_off + 0x2c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) special
+          READ_LONG (fx_off + 0x2c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) special
           PATCH_IF (save_for_half AND ((special & BIT8) = 0)) BEGIN // if we're saving for half and there's no EE save-for-half flag, split damage
-            // fudge factor is to determine which half of damage gets the full die when adding 1 per level
-            PATCH_IF save_for_half = 1 BEGIN SET save_fudge = 0 SET nonsave_fudge = 1 END ELSE BEGIN SET save_fudge = 1 SET nonsave_fudge = 0 END
-            READ_LONG (fx_off + 0x24 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) save // have to account for non-EE damage split
-            PATCH_IF ((save & (BIT0 + BIT1 + BIT2 + BIT3 + BIT4)) = 0) BEGIN // 1/2 damage that always happens 
-              PATCH_IF damage_special BEGIN
-                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((THIS + damage_fixed + nonsave_fudge) / 2)
-                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((THIS + damage_rolls + nonsave_fudge) / 2)
-              END ELSE BEGIN
-                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + nonsave_fudge) / 2)
-                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + nonsave_fudge) / 2)
-              END  
+            PATCH_IF damage_special BEGIN
+              SET special_fixed = special_fixed + LONG_AT (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2)))
+              SET special_rolls = special_rolls + LONG_AT (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2)))
             END ELSE BEGIN  
-              PATCH_IF damage_special BEGIN
-                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((THIS + damage_fixed + save_fudge) / 2)
-                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((THIS + damage_rolls + save_fudge) / 2)
+              READ_LONG (fx_off + 0x24 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) save // have to account for non-EE damage split
+              PATCH_IF ((save & (BIT0 + BIT1 + BIT2 + BIT3 + BIT4)) = 0) BEGIN // 1/2 damage that always happens 
+                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + nonsave_fudge_fixed) / 2)
+                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + nonsave_fudge_rolls) / 2)
               END ELSE BEGIN
-                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + save_fudge) / 2)
-                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + save_fudge) / 2)
+                WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + save_fudge_fixed) / 2)
+                WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + save_fudge_rolls) / 2)
               END  
             END
           END ELSE BEGIN // either no save-for-half or on EE with its save-for-half flag
@@ -454,8 +462,28 @@ BEGIN
             END  
           END
         END   
-      END        
-    END
+      END    
+    END // closes effects loop
+    PATCH_IF (damage_special AND (special_fixed OR special_rolls)) BEGIN
+      SET new_fixed = (special_fixed + damage_fixed)
+      SET new_rolls = (special_rolls + damage_rolls)
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        (0x30 * (abil_fx_idx + abil_fx_num + index2))) opcode
+        PATCH_IF opcode = 12 BEGIN // damage
+          READ_LONG (fx_off + 0x2c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) special
+          PATCH_IF (save_for_half AND ((special & BIT8) = 0)) BEGIN // if we're saving for half and there's no EE save-for-half flag, split damage
+            READ_LONG (fx_off + 0x24 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) save // have to account for non-EE damage split
+            PATCH_IF ((save & (BIT0 + BIT1 + BIT2 + BIT3 + BIT4)) = 0) BEGIN // 1/2 damage that always happens 
+              WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + nonsave_fudge_fixed) / 2)
+              WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + nonsave_fudge_rolls) / 2)
+            END ELSE BEGIN
+              WRITE_LONG (fx_off + 0x04 + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_fixed + save_fudge_fixed) / 2)
+              WRITE_LONG (fx_off + 0x1c + (0x30 * (abil_fx_idx + abil_fx_num + index2))) ((new_rolls + save_fudge_rolls) / 2)
+            END  
+          END
+        END   
+      END // closes second effects loop for damage_special
+    END // end patch_if for damage_special
     INSERT_BYTES (abil_off +        (0x28 * abil_num)) 0x28 // insert new ability
     WRITE_ASCIIE (abil_off +        (0x28 * abil_num)) "%abil%"
     WRITE_SHORT  (abil_off + 0x10 + (0x28 * abil_num)) index

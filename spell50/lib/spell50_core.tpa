@@ -7,6 +7,28 @@ ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SET round = 7 END
 // ee/obg2 code by using this divisor
 OUTER_SET damage_divisor = 2 - enhanced_edition // =1 on EE, =2 on !EE
 
+ACTION_IF GAME_IS ~soa tob bgt~ BEGIN // obg2
+  INCLUDE ~spell50/lib/ids_entries_spell.tph~ // the old bg2fp modder pack lives on!
+END 
+
+OUTER_SET iwdspells_arcane = 0 
+OUTER_SET iwdspells_divine = 0 
+ACTION_IF 
+  MOD_IS_INSTALLED ~stratagems/setup-stratagems.tp2~ ~1500~ OR
+  MOD_IS_INSTALLED ~dw_som/dw_som.tp2~               ~1500~ OR
+  MOD_IS_INSTALLED ~dw_talents/dw_talents.tp2~       ~1500~ OR
+  MOD_IS_INSTALLED ~iwdification/iwdification.tp2~   ~30~ BEGIN
+  OUTER_SET iwdspells_arcane = 1
+END
+ACTION_IF 
+  MOD_IS_INSTALLED ~stratagems/setup-stratagems.tp2~ ~1510~ OR
+  MOD_IS_INSTALLED ~dw_som/dw_som.tp2~               ~1510~ OR
+  MOD_IS_INSTALLED ~dw_talents/dw_talents.tp2~       ~1510~ OR
+  MOD_IS_INSTALLED ~iwdification/iwdification.tp2~   ~40~ BEGIN
+  OUTER_SET iwdspells_divine = 1
+END
+  
+
 INCLUDE ~spell50/lib/functions.tpa~      // functions that do the work
 INCLUDE ~spell50/lib/spell50_arcane.tpa~ // mainline arcane spells
 INCLUDE ~spell50/lib/spell50_divine.tpa~ // mainline divine spells
@@ -16,4 +38,4 @@ INCLUDE ~spell50/lib/spell50_misc.tpa~   // other spells
 OUTER_SET spell50_cap = %cap%
 >>>>>>>>
 
-COPY + ~./inline/tpa.tpa~ ~weidu_external/spell50/spell50_cap.tpa~ EVALUATE_BUFFER
+COPY ~./inline/tpa.tpa~ ~weidu_external/spell50/spell50_cap.tpa~ EVALUATE_BUFFER
