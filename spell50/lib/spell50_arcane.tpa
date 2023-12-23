@@ -177,9 +177,13 @@ COPY_EXISTING ~%WIZARD_REFLECTED_IMAGE%.spl~ ~override~ // spwi120, reflected im
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
-//COPY_EXISTING ~%WIZARD_SPOOK%.spl~ ~override~ // spwi125, spook
+//COPY_EXISTING ~%WIZARD_SPOOK%.spl~ ~override~ // spwi125, spook - save scales to -6, don't scale further
 //  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
 //  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%WIZARD_DANCING_LIGHTS%.spl~ ~override~ // spwi126, dancing light [sod]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END
+  BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_BLUR%.spl~ ~override~ // spwi201, blur
               ~spdm102.spl~       ~override~ // blur
@@ -473,6 +477,7 @@ COPY_EXISTING ~%WIZARD_CONFUSION%.spl~ ~override~ // spwi401, confusion
 COPY_EXISTING ~%WIZARD_FIRE_SHIELD_BLUE%.spl~ ~override~ // spwi403, fire shield (blue)
               ~%WIZARD_FIRE_SHIELD_RED%.spl~  ~override~ // spwi418, fire shield (red)
               ~%SUN_SOUL_GREATER_SUN%.spl~    ~override~ // spcl237, greater sun
+              ~1tarss.spl~                    ~override~ // fireshield (blue)
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 

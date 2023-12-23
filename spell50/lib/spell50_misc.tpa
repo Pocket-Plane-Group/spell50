@@ -2,9 +2,34 @@
 ///// spin/spcl/other                                  \\\\\
 /////                                                  \\\\\
 
+//COPY_EXISTING ~backstab.spl~ ~override~ // unused/not a spell
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~bardsong.spl~ ~override~ // unused/not a spell
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~bdaurafe.spl~ ~override~ // aura of fear - belhifet ability, scales save penalty by difficulty
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~bdmycsp1.spl~ ~override~ // hallucinator spores [sod]
+              ~bdmycsp2.spl~ ~override~ // pacifier spores [sod]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (round * 1) step_size = 5 END // 1 round/5 levels
+  BUT_ONLY IF_EXISTS
+
 COPY_EXISTING ~bdpweapn.spl~ ~override~ // Poison Weapon's on-hit effects
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 6 dur_special = 1 damage_fixed = 2 damage_special = 1 step_size = 4 RET abil_delta END // add another round to poison duration. +2 damage per 4 levels
   BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~bdsw1h26.spl~ ~override~ // sod - copied from phantom blade, but only used at level 1 to hand out weapons from a dialogue
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~drgrbrht.spl~ ~override~ // sod green dragon breath - has two levels for difficulty, doesn't need scaling
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~marw201.spl~  ~override~ // daer'ragh's mental agility
               ~marw301.spl~  ~override~ // daer'ragh's physical agility
@@ -188,6 +213,10 @@ COPY_EXISTING ~%DACE_FLAME%.spl~  ~override~ // spin799 - only one level in EE
   END  
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END
   BUT_ONLY IF_EXISTS
+
+//COPY_EXISTING ~%DRAGON_FEAR%.spl~ ~override~ // spin895, dragon fear - lasts one turn, but save bonuses scale - ignore like spook
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
 
 // only level 1 is used; ee trims out the extra headers
 //COPY_EXISTING ~%BEHOLDER_GAS_SPORE%.spl~ ~override~ // spin897, gas spore

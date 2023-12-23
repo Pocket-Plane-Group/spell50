@@ -98,38 +98,34 @@ COPY_EXISTING ~%CLERIC_SILENCE_15_FOOT%.spl~ ~override~ // sppr211, silence, 15'
   
 COPY_EXISTING ~%CLERIC_SPIRITUAL_HAMMER%.spl~ ~override~ // sppr213, spiritual hammer
               ~spin113.spl~                   ~override~ // spiritual hammer
-  PATCH_IF ("%SOURCE_RES%" STRING_COMPARE_CASE ~spin113~) OR (enhanced_edition) BEGIN // spin113 is fixed duration in non-EE
-    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) min_dur = 6 RET abil_delta END // three rounds + 1 round/level  
-    // hammer also gains an additional +1 enchantment every 6 levels (max at +6)  
-    PATCH_IF abil_delta <= 0 BEGIN
-      SET hammer = 0 // prevent hammer-creation loop below unless we extended spell
-    END ELSE BEGIN // if we added abilities 
-      READ_LONG  0x64 abil_off
-      READ_SHORT 0x68 abil_num
-      READ_LONG  0x6a fx_off
-      FOR (index = 0 ; index < abil_num ; ++index) BEGIN // start at existing abilities, as first hammer improvement should occur in old effects
-        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
-        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
-        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
-        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
-          READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
-          READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) orig
-          PATCH_IF op = 111 BEGIN // create weapon
-            SET hammer = (((level - 1) / 6) + 1) // increases at 7, 13, 19, 25, 31
-            PATCH_IF hammer < 2 BEGIN 
-              SPRINT resource ~shammr~ 
-            END ELSE BEGIN
-              PATCH_IF hammer > 5 BEGIN SET hammer = 6 END
-              SPRINT resource ~shammr%hammer%~
-            END  
-            WRITE_ASCIIE (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) ~%resource%~ #8 // new hammer
-            SET dam = hammer + 1
-            DEFINE_ASSOCIATIVE_ARRAY new_items BEGIN ~%resource%~, ~%hammer%~, 0 => ~%orig%~ END
-          END          
-        END  
-      END
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) min_dur = 6 RET abil_delta END // three rounds + 1 round/level  
+  // hammer also gains an additional +1 enchantment every 6 levels (max at +6)  
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities 
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // start at existing abilities, as first hammer improvement should occur in old effects
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        READ_ASCII (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) orig
+        PATCH_IF op = 111 BEGIN // create weapon
+          SET hammer = (((level - 1) / 6) + 1) // increases at 7, 13, 19, 25, 31
+          PATCH_IF hammer < 2 BEGIN 
+            SPRINT resource ~shammr~ 
+          END ELSE BEGIN
+            PATCH_IF hammer > 5 BEGIN SET hammer = 6 END
+            SPRINT resource ~shammr%hammer%~
+          END  
+          WRITE_ASCIIE (fx_off + 0x14 + ((index2 + abil_fx_idx) * 0x30)) ~%resource%~ #8 // new hammer
+          SET dam = hammer + 1
+          DEFINE_ASSOCIATIVE_ARRAY new_items BEGIN ~%resource%~, ~%hammer%~, 0 => ~%orig%~ END
+        END          
+      END  
     END
-  END  
+  END
   BUT_ONLY IF_EXISTS
   
 OUTER_FOR (index = 2 ; index < (hammer + 1) ; ++index) BEGIN // taking advantage that the highest-level hammer var is left over from above patch
@@ -148,6 +144,7 @@ END
 COPY_EXISTING ~%CLERIC_DRAW_UPON_HOLY_MIGHT%.spl~ ~override~ // sppr214, draw upon holy might
               ~%INNATE_DRAW_UPON_HOLY_MIGHT%.spl~ ~override~ // spin103, draw upon holy might
               ~bhaal2a.spl~                       ~override~ // draw upon holy might
+              ~bdcaela2.spl~                      ~override~ // draw upon unholy might
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (10 * round) step_dur = 0 step_size = 3 RET abil_delta END // duration is static, just create headers 
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // gets +1 con/str/dex every three levels

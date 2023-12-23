@@ -123,15 +123,38 @@ component for Cam to use when making/updating the mod.
 BEGIN ~Cam's Info Tool~ DESIGNATED 10000 NO_LOG_RECORD
 //DEPRECATED ~Internal use only~
 
-OUTER_SPRINT file bg2ee
-ACTION_IF GAME_IS ~bgee~ BEGIN OUTER_SPRINT file bgee END
-ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SPRINT file iwdee END
-ACTION_IF GAME_IS ~eet~ BEGIN OUTER_SPRINT file eet END
-ACTION_IF GAME_IS ~soa tob bgt~ BEGIN OUTER_SPRINT file obg2 END
-ACTION_IF GAME_IS ~iwd~ BEGIN OUTER_SPRINT file oiwd END
-ACTION_IF GAME_IS ~how totlm~ BEGIN OUTER_SPRINT file oiwd_exp END
-OUTER_SPRINT code ~spell50/spellcheck_%file%_code.txt~
-OUTER_SPRINT file ~spell50/spellcheck_%file%.txt~
+<<<<<<<< ./inline/always_checks.tpa
+ACTION_IF %check% %gamecheck% BEGIN
+  OUTER_SET ~%var%_%gamecheck%~ = 1
+  OUTER_SPRINT cd_game ~%gamecheck%~
+END ELSE BEGIN
+  OUTER_SET ~%var%_%gamecheck%~ = 0
+END
+>>>>>>>>  
+
+OUTER_SPRINT check ~GAME_IS~
+OUTER_SPRINT var ~game_is~
+ACTION_FOR_EACH gamecheck IN bg1 totsc soa tob iwd how totlm iwd2 pst bgee bg2ee iwdee pstee tutu tutu_totsc bgt eet ca iwd-in-bg2 BEGIN
+  COPY ~./inline/always_checks.tpa~ ~weidu_external/%MOD_FOLDER%/always_checks.tpa~ EVALUATE_BUFFER
+  REINCLUDE ~weidu_external/%MOD_FOLDER%/always_checks.tpa~
+END
+ 
+OUTER_SPRINT check ~GAME_INCLUDES~
+OUTER_SPRINT var ~game_includes~
+ACTION_FOR_EACH gamecheck IN bg1 totsc soa tob iwd how totlm iwd2 pst ca sod BEGIN
+  COPY ~./inline/always_checks.tpa~ ~weidu_external/%MOD_FOLDER%/always_checks.tpa~ EVALUATE_BUFFER
+  REINCLUDE ~weidu_external/%MOD_FOLDER%/always_checks.tpa~
+END
+
+DELETE ~weidu_external/%MOD_FOLDER%/always_checks.tpa~ // tidying up
+
+ACTION_IF game_is_iwd  OR game_is_how OR game_is_totlm BEGIN OUTER_SET original_iwd = 1 END ELSE BEGIN OUTER_SET original_iwd = 0 END 
+ACTION_IF game_is_bg1  OR game_is_totsc                BEGIN OUTER_SET original_bg1 = 1 END ELSE BEGIN OUTER_SET original_bg1 = 0 END 
+ACTION_IF game_is_soa  OR game_is_tob                  BEGIN OUTER_SET original_bg2 = 1 END ELSE BEGIN OUTER_SET original_bg2 = 0 END 
+ACTION_IF game_is_tutu OR game_is_tutu_totsc           BEGIN OUTER_SET tutu_gen     = 1 END ELSE BEGIN OUTER_SET tutu_gen     = 0 END 
+
+OUTER_SPRINT code ~spell50/spellcheck_%cd_game%_code.txt~
+OUTER_SPRINT file ~spell50/spellcheck_%cd_game%.txt~
 
 <<<<<<<<./inline/spellcheck.txt
 >>>>>>>>

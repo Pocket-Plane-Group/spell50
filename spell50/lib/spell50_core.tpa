@@ -7,9 +7,8 @@ ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SET round = 7 END
 // ee/obg2 code by using this divisor
 OUTER_SET damage_divisor = 2 - enhanced_edition // =1 on EE, =2 on !EE
 
-ACTION_IF GAME_IS ~soa tob bgt~ BEGIN // obg2
-  INCLUDE ~spell50/lib/ids_entries_spell.tph~ // the old bg2fp modder pack lives on!
-END 
+// the old bg2fp modder pack lives on! include for sod since it's missing symbols for the Bhaalspawn innates
+INCLUDE ~spell50/lib/ids_entries_spell.tph~ 
 
 OUTER_SET iwdspells_arcane = 0 
 OUTER_SET iwdspells_divine = 0 
