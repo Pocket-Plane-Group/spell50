@@ -149,7 +149,7 @@ COPY_EXISTING ~%HELM_SEEKING_SWORD%.spl~ ~override~ // spcl731, seeking sword
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%LATHANDER_BOON%.spl~ ~override~ // spcl741, boon of lathander
-              ~%spcl741d.spl~        ~override~ // APR subspell for oBG2
+              ~%LATHANDER_BOON%d.spl~        ~override~ // APR subspell for oBG2
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -166,10 +166,30 @@ COPY_EXISTING ~spdn01a.spl~  ~override~ // absorb health (spcl102) subspell
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dmage_fixed = 2 min_dur = 10000 END // fixed duration, absorbs 2 health/level
   BUT_ONLY IF_EXISTS
 
-COPY_EXISTING ~%SHADOW_DRAGON_SHADOWS%.spl~ ~override~ // spin687, create shadows
+COPY_EXISTING ~%SHADOW_DRAGON_SHADOWS%.spl~  ~override~ // spin687, create shadows
+              ~%SHADOW_DRAGON_SHADOWS%a.spl~ ~override~ // spin687, create shadows subspell
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
+
+// has two headers for 1, 12
+//COPY_EXISTING ~%NON_DETECTION_SELF%.spl~  ~override~ // spin698, improved invisibility
+//              ~%NON_DETECTION_SELF%a.spl~ ~override~ // spin698, improved invisibility
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%NYMPH_CONFUSION%.spl~ ~override~ // spin704, confusion
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%DACE_FLAME%.spl~  ~override~ // spin799 - only one level in EE
+              ~%DACE_FLAME%d.spl~ ~override~ // spin799d, [subspell of flame strike]
+  PATCH_IF !enhanced_edition BEGIN // [obg2 fixes]
+    LPF ALTER_EFFECT INT_VAR silent = 1 match_opcode = 146 parameter2 = 1 END // obg2 fix
+  END  
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END
+  BUT_ONLY IF_EXISTS
+
+// only level 1 is used; ee trims out the extra headers
+//COPY_EXISTING ~%BEHOLDER_GAS_SPORE%.spl~ ~override~ // spin897, gas spore
+//  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
+//  BUT_ONLY IF_EXISTS

@@ -28,11 +28,54 @@ ACTION_IF
   OUTER_SET iwdspells_divine = 1
 END
   
+ACTION_DEFINE_ASSOCIATIVE_ARRAY new_effs  BEGIN END
+ACTION_DEFINE_ASSOCIATIVE_ARRAY new_items BEGIN END
+ACTION_DEFINE_ASSOCIATIVE_ARRAY new_cres  BEGIN END
 
 INCLUDE ~spell50/lib/functions.tpa~      // functions that do the work
 INCLUDE ~spell50/lib/spell50_arcane.tpa~ // mainline arcane spells
 INCLUDE ~spell50/lib/spell50_divine.tpa~ // mainline divine spells
 INCLUDE ~spell50/lib/spell50_misc.tpa~   // other spells
+
+ACTION_PHP_EACH new_effs AS params => source BEGIN
+  ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.eff~ BEGIN
+  
+    COPY_EXISTING ~%source%.eff~ ~override/%params_0%.eff~
+      PATCH_IF !params_1 AND !params_2 AND !params_3 BEGIN
+        WRITE_ASCIIE 0x30 ~%params_0%~ #8 // creature summon for undead ward
+      END ELSE BEGIN
+        PATCH_IF params_1 BEGIN WRITE_LONG 0x28 params_1 END // update duration
+        PATCH_IF params_2 BEGIN WRITE_LONG 0x38 params_2 END // update damage die rolls
+        PATCH_IF params_3 BEGIN WRITE_LONG 0x60 params_3 END // new p3 for poison damage
+      END  
+      
+  END
+END  
+
+ACTION_PHP_EACH new_items AS params => source BEGIN
+  ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.eff~ BEGIN
+  
+    COPY_EXISTING ~%source%.itm~ ~override/%params_0%.itm~
+      PATCH_IF params_1 BEGIN // spiritual hammer
+        WRITE_LONG 0x60 params_1 // enchantment
+        PATCH_IF params_1 > 3 BEGIN SET speed = 0 END ELSE BEGIN SET speed = (4 - params_1) END
+        LPF ALTER_HEADER INT_VAR speed to_hit = params_1 damage = (params_1 + 1) END // to-hit, damage, speed of a +x weapon
+      END 
+      PATCH_IF params_2 BEGIN
+        LPF ALTER_EFFECT INT_VAR match_opcode = 12 parameter1 = params_2 END // +x electrical damage
+      END        
+      
+  END
+END  
+
+ACTION_PHP_EACH new_cres AS params => source BEGIN
+  ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.cre~ BEGIN
+  
+    COPY_EXISTING ~%source%.cre~ ~override/%params_0%.cre~
+      WRITE_BYTE 0x234 params_1 // update level
+      
+  END
+END  
 
 <<<<<<<<./inline/tpa.tpa
 OUTER_SET spell50_cap = %cap%
