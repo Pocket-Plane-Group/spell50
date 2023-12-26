@@ -1,0 +1,397 @@
+
+/*
+This is not meant to be a comprehensive fixpack. I'm only addressing
+bugs that directly affect extending the spells correctly until the spells
+are fixed by their respective fixpacks, e.g. BG2 Fixpack or EE Fixpack.
+In a handful of cases I'm also fixing bugs from IWDSpells (IWDification, 
+SCS or ToF) until we can get those addressed as well. 
+*/
+
+/////                                                  \\\\\
+///// iwdspells fixes                                  \\\\\
+/////                                                  \\\\\
+
+ACTION_IF !enhanced_edition BEGIN // iwdspells fixes - obg2 doesn't support op146 mode 2. Bad Cam!
+
+  COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%.spl~ ~override~ // spwi431, vitriolic sphere
+    LPF ALTER_EFFECT INT_VAR match_opcode = 146 match_timing = 4 parameter2 = 0 END // obg2 fix
+    LPF ALTER_EFFECT INT_VAR match_opcode = 142 duration = 6 END // obg2 fix
+    BUT_ONLY IF_EXISTS
+
+  COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%z.spl~ ~override~ // spwi431z, [subspell of vitriolic sphere: splash damage] - only needs changing on obg2 but 1 header on EE
+    LPF ALTER_EFFECT INT_VAR match_opcode = 146 parameter2 = 0 END // obg2 fix
+    BUT_ONLY IF_EXISTS
+
+  COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%.spl~ ~override~ // spwi524, shroud of flame  
+    LPF ALTER_EFFECT INT_VAR match_opcode = 146 match_timing = 4 parameter2 = 0 END // obg2 fix
+    BUT_ONLY IF_EXISTS
+
+  COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%c.spl~ ~override~ // spwi524c, [subspell of shroud of flame]
+    LPF ALTER_EFFECT INT_VAR match_opcode = 146 parameter2 = 0 END // obg2 fix
+    BUT_ONLY IF_EXISTS
+  
+  COPY_EXISTING ~%CLERIC_FLAME_STRIKE%.spl~  ~override~ // sppr503, flame strike
+                ~%CLERIC_FLAME_STRIKE%d.spl~ ~override~ // [flame strike damage moved here w/ iwdspells]
+                ~%DACE_FLAME%.spl~           ~override~ // spin799 - only one level in EE
+                ~%DACE_FLAME%d.spl~          ~override~ // spin799d, [subspell of flame strike]
+    LPF ALTER_EFFECT INT_VAR silent = 1 match_opcode = 146 parameter2 = 1 END // obg2 fix
+    BUT_ONLY IF_EXISTS
+    
+END
+
+/////                                                  \\\\\
+///// iwdee-specific fixes                             \\\\\
+/////                                                  \\\\\
+
+ACTION_IF game_is_iwdee BEGIN
+
+  // All (+1, +2, and +3) hammers from IWDEE's Spiritual Hammer have the weapon speed of a +2 hammer.
+  OUTER_FOR (index = 1 ; index < 4 ; ++index) BEGIN // bg2 uses shammr items, so this won't do anything outside of iwdee
+
+    COPY_EXISTING ~shamme%index%.itm~ ~override~
+      LPF ALTER_HEADER INT_VAR match_type = 1 speed = (4 - index) END
+      BUT_ONLY IF_EXISTS
+      
+  END
+
+  // IWDEE Fire Seed duration calculations are still using oIWD rounds so every duration is 7/6 longer than it should be
+  COPY_EXISTING ~%CLERIC_FIRE_SEEDS%.spl~ ~override~ // sppr606, fire seeds
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF (duration > 6) BEGIN
+          WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) ((THIS * 6) / 7)
+        END        
+      END
+    END    
+    BUT_ONLY IF_EXISTS
+
+
+  // On IWDEE, the new headers (level >= 24) for Symbols Stun and Fear (spwi811, spwi816, sppr708, sppr718) have horrifically 
+  // incorrect durations, e.g. at level 24 they should last 10 rounds but are actually 26 rounds.
+  COPY_EXISTING ~%CLERIC_SYMBOL_FEAR%.spl~ ~override~ // sppr706, symbol, fear
+                ~%CLERIC_SYMBOL_STUN%.spl~ ~override~ // sppr718, symbol, stun
+                ~%WIZARD_SYMBOL_FEAR%.spl~ ~override~ // spwi811, symbol, fear
+                ~%WIZARD_SYMBOL_STUN%.spl~ ~override~ // spwi816, symbol, stun
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      PATCH_IF (level >= 22) BEGIN
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+          PATCH_IF (duration > 6) BEGIN
+            WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (((level / 3) + 2) * round)
+          END        
+        END
+      END    
+    END
+    BUT_ONLY IF_EXISTS
+
+  // Similarly Wither (sppr740), Regeneration (sppr711), and Aura of Flaming Death (sppr730) were also extended incorrectly, 
+  // lasting 1 round/level beyond level 20 instead of the correct 1 round/2 levels.
+  COPY_EXISTING ~%CLERIC_REGENERATE%.spl~            ~override~ // sppr711, regeneration
+                ~%CLERIC_AURA_OF_FLAMING_DEATH%.spl~ ~override~ // sppr730, aura of flaming death
+                ~%CLERIC_WITHER%.spl~                ~override~ // sppr740, wither
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      PATCH_IF (level >= 21) BEGIN
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+          PATCH_IF (duration > 6) BEGIN
+            WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) ((level / 2) * round)
+          END        
+        END
+      END    
+    END
+    BUT_ONLY IF_EXISTS
+
+END ELSE BEGIN
+
+/////                                                  \\\\\
+///// non-iwdee fixes                                  \\\\\
+/////                                                  \\\\\
+
+  // "leftover" Holy Smite/Unholy Blight sp313 11-20 EFFs are still using the 1d2 dice size, lack MI flag; fix before cloning into new ones
+  COPY_EXISTING_REGEXP GLOB ~^sp313l[0-9]+\.eff$~ ~override~
+    WRITE_LONG 0x3c 4 // dice size
+    WRITE_LONG 0x40 (THIS BOR BIT24) // ensure 'bypass mirror image' flag is set
+    BUT_ONLY
+
+  // While it's unused, Mass Healing (bhaal1a) has the wrong target for op 164 on multiple headers.
+  COPY_EXISTING ~bhaal1a.spl~ ~override~ // unused
+    LPF ALTER_EFFECT INT_VAR match_target = 3 target = 2 END
+    BUT_ONLY IF_EXISTS
+
+  // bhaal1b: (BG2EE) The duration is +1 round every 2 levels, but at some point the spell goes from level 18 to 21 instead of level 20.
+  COPY_EXISTING ~bhaal1b.spl~ ~override~ // unused
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      PATCH_IF ((level > 20) AND ((level MODULO 2) = 1)) BEGIN // odd-numbered level > 20
+        WRITE_SHORT  (abil_off + 0x10 + (index * 0x28)) (THIS - 1)
+      END
+    END 
+    BUT_ONLY IF_EXISTS 
+
+//    // BHAAL3B: (BG2EE) Opcode 248, refers to a BH3B1(.eff) resource that doesn't exist (the .spl does exist though)
+//    ACTION_IF FILE_EXISTS_IN_GAME ~bhaal3b.spl~ BEGIN
+//  
+//      OUTER_FOR (index = 1 ; index < 6 ; ++index) BEGIN
+//      
+//        CREATE EFF VERSION ~V2.0~ ~bh3b%index%~
+//          WRITE_LONG  0x10 12                // damage
+//          WRITE_LONG  0x14 2                 // target
+//          WRITE_LONG  0x18 6                 // power
+//          WRITE_LONG  0x1c ((index * 2) + 2) // amount
+//          WRITE_SHORT 0x22 64                // magic
+//          WRITE_LONG  0x24 1                 // timing
+//          WRITE_SHORT 0x2c 100               // probability
+//          WRITE_LONG  0x48 BIT0 + BIT6       // HP drain
+//          
+//      END    
+//        
+//      CREATE EFF VERSION ~V2.0~ ~bh1b1a~
+//        WRITE_LONG  0x10 141         // lighting effects
+//        WRITE_LONG  0x14 2           // target
+//        WRITE_LONG  0x18 6           // power
+//        WRITE_SHORT 0x20 2           // necromancy water
+//        WRITE_LONG  0x24 9           // timing
+//        WRITE_SHORT 0x2c 100         // probability
+//  
+//      COPY_EXISTING ~bhaal3b.spl~ ~override~ // Hand of Murder
+//        LPF CLONE_EFFECT INT_VAR match_opcode = 248 STR_VAR resource = bh1b1a END
+//        BUT_ONLY IF_EXISTS
+//        
+//    END
+//  
+//    // (BG2EE) Opcode 69, level 1 lasts 90 seconds instead of 60
+//    COPY_EXISTING ~spin698.spl~ ~override~ 
+//      LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 90 duration = 60 END
+//      BUT_ONLY IF_EXISTS
+//  
+//    // has a very different level 1 header from the rest (seems to be copied from Burning Hands). Normally I'd say to leave it alone since it's unused, 
+//    // but I believe UB uses it in a restoration so let's go ahead and fix it by dumping the extra headers. 
+//    COPY_EXISTING ~%HELL_HOUND_FLAME%.spl~  ~override~ // Hell Hound Breath (spin956)
+//      LPF CD_TRIM-O-MATIC INT_VAR level_cap = 1 END // delete all but the first header
+//      BUT_ONLY IF_EXISTS
+ 
+  // Shillelagh (sppr110)  is two seconds short in duration at level 20 - already fixed on iwdee
+  COPY_EXISTING ~%CLERIC_SHILLELAGH%.spl~ ~override~ // sppr110, shillelagh
+    LPF ALTER_EFFECT INT_VAR header = 19 match_duration = 142 duration = 144 END
+    BUT_ONLY IF_EXISTS
+
+  // disables the potion-drinking string 16233, "*gulp*", when cast at level <10 - fine on iwdee
+  COPY_EXISTING ~%CLERIC_CHAOTIC_COMMANDS%.spl~ ~override~ // sppr508, chaotic commands
+    LPF DELETE_EFFECT INT_VAR silent = 1 header = 0 match_opcode = 267 match_parameter1 = 16233  END // bg2ee
+    LPF DELETE_EFFECT INT_VAR silent = 1 header = 0 match_opcode = 267 match_parameter1 = 26240  END // bgee
+    BUT_ONLY IF_EXISTS
+ 
+  // Magic Resistance (sppr509) doesn't get its duration properly level-scaled at levels 19 (short one round at 19, two rounds at 20); already fixed on iwdee
+  COPY_EXISTING ~%CLERIC_MAGIC_RESISTANCE%.spl~ ~override~ // sppr509, magic resistance
+    LPF ALTER_EFFECT INT_VAR silent = 1 header = 10 match_duration = 126 duration = 132 END // use silent as spwish31 only has one header on non-iwdee
+    LPF ALTER_EFFECT INT_VAR silent = 1 header = 11 match_duration = 126 duration = 138 END
+    BUT_ONLY IF_EXISTS
+
+  // Shield of the Archons (sppr701) absorbs 9 levels (should be 7) of level 3 spells when cast at level <16.
+  COPY_EXISTING ~%CLERIC_SHIELD_OF_THE_ARCHONS%.spl~ ~override~ // sppr701, shield of the archons
+    LPF ALTER_EFFECT INT_VAR header = 0 match_opcode = 201 parameter1 = 7 END
+    BUT_ONLY IF_EXISTS
+
+  // doesn't play eff_m05 when cast at level <16.
+  COPY_EXISTING ~%CLERIC_CONFUSION%.spl~ ~override~ // sppr709, confusion
+    LPF CLONE_EFFECT INT_VAR header = 0 match_opcode = 174 timing = 1 duration = 0 STR_VAR match_resource = eff_e05 resource = eff_m05 END
+    BUT_ONLY IF_EXISTS
+
+  // Polymorph Self's (spwi416) duration is two seconds too long at levels >= 14.
+  COPY_EXISTING ~%WIZARD_POLYMORPH_SELF%.spl~ ~override~ // spwi416, polymorph self
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      PATCH_IF (level >= 14) BEGIN
+        READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+        READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+        FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+          READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+          PATCH_IF (duration > 6) BEGIN
+            WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (THIS - 2)
+          END        
+        END
+      END    
+    END
+    BUT_ONLY IF_EXISTS
+
+  // first header has a dupe op 61 and a lighting effect (op 141) that's not present on any other header - fine in iwdee
+  COPY_EXISTING ~%WIZARD_PROTECTION_FROM_ACID%.spl~        ~override~ // spwi517, protection from acid
+    LPF DELETE_EFFECT INT_VAR header = 0 match_opcode = 141 END
+    LPF DELETE_EFFECT INT_VAR header = 0 match_opcode =  61 multi_match = 1 END // has dupe op61 effects
+    BUT_ONLY IF_EXISTS
+
+  // SPWI620 : (SOD) Opcode 165, level 19 duration equals 30 instead of 18
+  COPY_EXISTING ~%WIZARD_CONJURE_FIRE_ELEMENTAL%.spl~  ~override~ // spwi620, conjure fire elemental
+    LPF ALTER_EFFECT INT_VAR silent = 1 match_opcode = 165 duration = 18 END // this isn't present with IWDSpells
+    BUT_ONLY IF_EXISTS
+
+  // SPWI622 : The duration before level 12 is longer than from level 12 onwards
+  COPY_EXISTING ~%WIZARD_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // spwi622, conjure earth elemental
+    LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 840 duration = 660 END
+    BUT_ONLY IF_EXISTS
+
+  // Summon (Dark) Planetar (spwi923, spwi924) have the wrong duration on its level 1 header; alternatively they're missing eight headers between that header and the second.
+  // already fixed on iwdee, which just changes the level 1 header duration
+  COPY_EXISTING ~%WIZARD_SUMMON_PLANATAR_GOOD%.spl~ ~override~ // spwi923, summon planetar
+                ~%WIZARD_SUMMON_PLANATAR_EVIL%.spl~ ~override~ // spwi924, summon dark planetar
+    LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 78 duration = 126 END
+    BUT_ONLY IF_EXISTS
+
+END
+
+/////                                                  \\\\\
+///// general fixes                                    \\\\\
+/////                                                  \\\\\ 
+  
+// thac0 ranges down to -11, but fighter THAC0 is capped at 0
+COPY_EXISTING ~ohtmps1.spl~                         ~override~ // holy power
+              ~%CLERIC_HOLY_POWER%.spl~             ~override~ // sppr412, holy power
+              ~%WIZARD_TENSERS_TRANSFORMATION%.spl~ ~override~ // spwi603, tenser's transformation
+  SET thac0_fudge = 0
+  PATCH_IF game_is_iwdee AND ("%SOURCE_RES%" STRING_COMPARE_CASE "%WIZARD_TENSERS_TRANSFORMATION%" = 0) BEGIN // don't use this patch on bg2 mordy sword (see above)
+    SET thac0_fudge = 2 // tenser's is two better than fighter on IWDEE
+  END  
+  READ_LONG  0x64 abil_off
+  READ_SHORT 0x68 abil_num
+  READ_LONG  0x6a fx_off
+  FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+    PATCH_IF !index BEGIN                                        // first header level is always artificially set to 1
+      READ_SHORT  (abil_off + 0x10 + ((index + 1) * 0x28)) level // read level from second header
+      SET level -= 1                                             // and adjust
+    END ELSE BEGIN                                               // otherwise
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+    END
+    READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+    READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+    FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+      READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+      READ_SHORT (fx_off + 0x08 + ((index2 + abil_fx_idx) * 0x30)) p2
+      PATCH_IF ((op = 54) AND (p2 = 1)) BEGIN // thac0 set
+        // cap progression at 0 (bg2) or -2 (iwdee) - basically bg2 does it via a base set and a second effect with +2 bonus; iwdee combines these into one effect
+        PATCH_IF level > 20 BEGIN SET thac0 = (0 - thac0_fudge) END ELSE BEGIN SET thac0 = (21 - (level + thac0_fudge)) END
+        WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) thac0
+      END        
+    END  
+  END
+  BUT_ONLY IF_EXISTS
+
+// All versions of Summon (Fallen) Deva (sppr727, sppr727, spcl923, spcl935) either have the wrong duration when cast at a minimum 
+// level, or are missing several headers as the duration jumps 5 rounds between minimum cast and level 14. This wouldn't affect clerics 
+// as their minimum level to cast this spell is 14, but it could affect paladins or enemy casting.
+COPY_EXISTING ~%PALADIN_SUMMON_DEVA%.spl~           ~override~ // spcl923, summon deva
+              ~%BLACKGUARD_SUMMON_FALLEN_DEVA%.spl~ ~override~ // spcl935, summon fallen deva
+              ~%CLERIC_SUMMON_DEVA%.spl~            ~override~ // sppr726, summon deva
+              ~%CLERIC_SUMMON_FALLEN_DEVA%.spl~     ~override~ // sppr727, summon fallen deva
+  LPF CD_MISSING_SPELL_HEADERS INT_VAR first_missing = 9 last_missing = 13 END 
+  READ_LONG  0x64 abil_off
+  READ_SHORT 0x68 abil_num
+  READ_LONG  0x6a fx_off
+  FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+    PATCH_IF !index BEGIN                                        // first header level is always artificially set to 1
+      READ_SHORT  (abil_off + 0x10 + ((index + 1) * 0x28)) level // read level from second header
+      SET level -= 1                                             // and adjust
+    END ELSE BEGIN                                               // otherwise
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+    END
+    PATCH_IF (level < 14) BEGIN
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF (duration > 6) BEGIN
+          WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) ((level + 4) * round)
+        END        
+      END
+    END    
+  END
+  BUT_ONLY IF_EXISTS
+
+// first header has a different target, lacks the 'Hasted' string and portrait icon, and has a duration progression out of sync with the rest of the spell. 
+// It looks like it was copied from arcane Haste and then the first header was adjusted since it's the only one used. I say we add the 'hasted' string to the 
+// first header and then dump the rest of them. 
+COPY_EXISTING ~%GOLEM_HASTE%.spl~  ~override~ // spin978, golem haste
+  LPF CD_TRIM-O-MATIC INT_VAR level_cap = 1 END // delete all but the first header
+  LPF CLONE_EFFECT INT_VAR match_opcode = 16 opcode = 139 parameter1 = 14023 timing = 1 duration = 0 END 
+  BUT_ONLY IF_EXISTS  
+
+// SPWI318: (BG2EE) Level 1 is missing and should increase the duration by 3 rounds - didn't find, but
+// spwi318 level 11 header has dupe 328/233 opcodes; spra302 has these dupes on all headers
+// iwdee only has a dupe 233 on level 11 for both - no 328, and durations are good
+COPY_EXISTING ~spra302.spl~ ~override~ // minor spell deflection [stalker]
+  LPF DELETE_EFFECT INT_VAR match_opcode = 233 multi_match = 1 END
+  LPF DELETE_EFFECT INT_VAR match_opcode = 328 multi_match = 1 END
+  BUT_ONLY IF_EXISTS
+
+// SPWI318: (BG2EE) Level 1 is missing and should increase the duration by 3 rounds - didn't find, but
+// spwi318 level 11 header has dupe 328/233 opcodes; spra302 has these dupes on all headers
+// iwdee only has a dupe 233 on level 11 for both - no 328, and durations are good
+COPY_EXISTING ~%WIZARD_MINOR_SPELL_DEFLECTION%.spl~ ~override~ // spwi318, minor spell deflection
+  LPF DELETE_EFFECT INT_VAR silent = 1 header = 6 match_opcode = 233 multi_match = 1 END
+  LPF DELETE_EFFECT INT_VAR silent = 1 header = 6 match_opcode = 328 multi_match = 1 END
+  LPF ALTER_EFFECT  INT_VAR silent = 1 header = 6 match_duration = 180 duration = 198 END
+  BUT_ONLY IF_EXISTS
+
+// The expiry sound from Protection from Electricity (spwi512) can be blocked by MR when cast at level 20.
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_ELECTRICITY%.spl~ ~override~ // spwi512, protection from electricity
+  LPF ALTER_EFFECT INT_VAR match_resist_dispel = 1 resist_dispel = 3 END
+  BUT_ONLY IF_EXISTS
+
+// increments--rather than sets--magic damage resistance 100% when cast at level >= 19. Another BG2EE find, same caveats as above.
+COPY_EXISTING ~%WIZARD_PROTECTION_FROM_MAGIC_ENERGY%.spl~ ~override~ // spwi606, protection from magic energy
+  LPF ALTER_EFFECT INT_VAR match_opcode = 31 parameter2 = 1 END // set, not increment
+  BUT_ONLY IF_EXISTS
+  
+// spwi608: (SOD) Opcode 230, different resistance at level 18
+COPY_EXISTING ~%WIZARD_PIERCE_MAGIC%.spl~ ~override~ // spwi608, pierce magic
+  LPF ALTER_EFFECT INT_VAR match_opcode = 230 resist_dispel = 0 END
+  BUT_ONLY IF_EXISTS
+
+//Contingency plays the animation spcontin (bam via vvc) for 3 or 4 seconds, depending on the level cast, but it's a 5-second animation.
+COPY_EXISTING ~%WIZARD_CONTINGENCY%.spl~ ~override~ // spwi617, contingency
+  LPF ALTER_EFFECT INT_VAR match_opcode = 215 timing = 1 duration = 0 END
+  BUT_ONLY IF_EXISTS
+
+// Summon Nishruu and Summon Efreeti's (spwi624, spwi717) duration is two seconds too long at levels >18. 
+COPY_EXISTING ~%WIZARD_SUMMON_NISHRUU%.spl~ ~override~ // spwi624, summon nishruu
+              ~%WIZARD_SUMMON_EFREET%.spl~  ~override~ // spwi717, summon efreeti
+  READ_LONG  0x64 abil_off
+  READ_SHORT 0x68 abil_num
+  READ_LONG  0x6a fx_off
+  FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+    READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+    PATCH_IF ((level > 18) AND (level < 21)) BEGIN
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) duration
+        PATCH_IF (duration > 6) BEGIN
+          WRITE_LONG  (fx_off + 0x0e + ((index2 + abil_fx_idx) * 0x30)) (THIS - 2)
+        END        
+      END
+    END    
+  END
+  BUT_ONLY IF_EXISTS

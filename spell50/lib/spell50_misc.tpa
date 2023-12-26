@@ -276,14 +276,6 @@ COPY_EXISTING ~%NYMPH_CONFUSION%.spl~ ~override~ // spin704, confusion
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
-COPY_EXISTING ~%DACE_FLAME%.spl~  ~override~ // spin799 - only one level in EE
-              ~%DACE_FLAME%d.spl~ ~override~ // spin799d, [subspell of flame strike]
-  PATCH_IF !enhanced_edition BEGIN // [obg2 fixes]
-    LPF ALTER_EFFECT INT_VAR silent = 1 match_opcode = 146 parameter2 = 1 END // obg2 fix
-  END  
-  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END
-  BUT_ONLY IF_EXISTS
-
 //COPY_EXISTING ~%DRAGON_FEAR%.spl~ ~override~ // spin895, dragon fear - lasts one turn, but save bonuses scale - ignore like spook
 //  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
 //  BUT_ONLY IF_EXISTS

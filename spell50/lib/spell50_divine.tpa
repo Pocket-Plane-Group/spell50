@@ -113,7 +113,8 @@ ACTION_IF game_is_iwdee BEGIN
 
 END
   
-COPY_EXISTING ~%CLERIC_RESIST_FIRE%.spl~ ~override~ // sppr210, resist fire and cold
+COPY_EXISTING ~%CLERIC_RESIST_FIRE%.spl~          ~override~ // sppr210, resist fire and cold [bg2 symbol]
+              ~%CLERIC_RESIST_FIRE_AND_COLD%.spl~ ~override~ // sppr216, resist fire/cold [iwdee symbol]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
   
@@ -183,10 +184,6 @@ ACTION_IF game_is_iwdee BEGIN
   COPY_EXISTING ~%CLERIC_GOODBERRY%.spl~ ~override~ // sppr215, goodberry
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 2 step_dur = 1 END // 1 day/level (op255 does duration in days)
     BUT_ONLY IF_EXISTS
-
-  COPY_EXISTING ~%CLERIC_RESIST_FIRE_AND_COLD%.spl~ ~override~ // sppr216, resist fire/cold
-    LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
-    BUT_ONLY IF_EXISTS
   
 END
   
@@ -252,12 +249,6 @@ ACTION_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 damage_special = 1 damage_rolls = 1 stepsize = 2 END // + 1d6/2 levels
 
 END ELSE BEGIN 
-
-  // "leftover" sp313 11-20 EFFs are still using the 1d2 dice size, lack MI flag; fix before cloning into new ones
-  COPY_EXISTING_REGEXP GLOB ~^sp313l[0-9]+\.eff$~ ~override~
-    WRITE_LONG 0x3c 4 // dice size
-    WRITE_LONG 0x40 (THIS BOR BIT24) // ensure 'bypass mirror image' flag is set
-    BUT_ONLY
     
   COPY_EXISTING ~%CLERIC_HOLY_SMITE%.spl~    ~override~ // sppr313, holy smite
                 ~%CLERIC_UNHOLY_BLIGHT%.spl~ ~override~ // sppr314, unholy blight
@@ -380,13 +371,8 @@ COPY_EXISTING ~%CLERIC_HOLY_POWER%.spl~ ~override~ // sppr412, holy power
     READ_LONG  0x64 abil_off
     READ_SHORT 0x68 abil_num
     READ_LONG  0x6a fx_off
-    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through all abilities, as THAC0 at levels 21-30 are wrong in IWDEE
-      PATCH_IF !index BEGIN                                        // first header level is always artificially set to 1
-        READ_SHORT  (abil_off + 0x10 + ((index + 1) * 0x28)) level // read level from second header
-        SET level -= 1                                             // and adjust
-      END ELSE BEGIN                                               // otherwise
-        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
-      END
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
       READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
       READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
       PATCH_IF level > 20 BEGIN SET thac0 = 0 END ELSE BEGIN SET thac0 = (21 - level) END // minimum thac0 is 0
@@ -464,11 +450,10 @@ COPY_EXISTING ~%CLERIC_SPIRIT_FIRE%.spl~  ~override~ // sppr450, spirit fire
  
  ACTION_IF !game_is_iwdee BEGIN // iwdee flame strike is flat 6d8 damage
   
-  COPY_EXISTING ~%CLERIC_FLAME_STRIKE%.spl~ ~override~ // sppr503, flame strike
-                ~sppr503d.spl~              ~override~ // [flame strike damage moved here w/ iwdspells]
-    PATCH_IF !enhanced_edition BEGIN // [obg2 fixes]
-      LPF ALTER_EFFECT INT_VAR silent = 1 match_opcode = 146 parameter2 = 1 END // obg2 fix
-    END  
+  COPY_EXISTING ~%CLERIC_FLAME_STRIKE%.spl~  ~override~ // sppr503, flame strike
+                ~%CLERIC_FLAME_STRIKE%d.spl~ ~override~ // [flame strike damage moved here w/ iwdspells]
+                ~%DACE_FLAME%.spl~           ~override~ // spin799 - only one level in EE
+                ~%DACE_FLAME%d.spl~          ~override~ // spin799d, [subspell of flame strike]
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 save_for_half = 1 END // damage is 1d8/level 
     BUT_ONLY IF_EXISTS
 

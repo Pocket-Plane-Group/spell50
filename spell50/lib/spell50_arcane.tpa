@@ -427,7 +427,7 @@ COPY_EXISTING ~%WIZARD_FIREBALL%.spl~  ~override~ // spwi304, fireball
 
 COPY_EXISTING ~%WIZARD_HASTE%.spl~ ~override~ // spwi305, haste
               ~%MAZZY_HASTE%.spl~  ~override~ // spin828, haste
-              ~%GOLEM_HASTE%.spl~  ~override~ // spin978, golem haste
+//            ~%GOLEM_HASTE%.spl~  ~override~ // spin978, golem haste - trimmed down to one level in _fixes
               ~spra301.spl~        ~override~ // haste [stalker]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
@@ -755,10 +755,6 @@ COPY_EXISTING ~%WIZARD_MORDENKAINENS_FORCE_MISSILES%b.spl~ ~override~ // spwi429
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%.spl~ ~override~ // spwi431, vitriolic sphere
-  PATCH_IF !enhanced_edition BEGIN // [obg2 fixes]
-    LPF ALTER_EFFECT INT_VAR match_opcode = 146 match_timing = 4 parameter2 = 0 END // obg2 fix
-    LPF ALTER_EFFECT INT_VAR match_opcode = 142 duration = 6 END // obg2 fix
-  END  
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // just need new headers
   // can't be done automatically as acid damage decays and has weird save system
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -835,7 +831,6 @@ COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%y.spl~ ~override~ // spwi431y, [subspell
 ACTION_IF !enhanced_edition BEGIN // [obg2 fixes]
 
   COPY_EXISTING ~%WIZARD_VITRIOLIC_SPHERE%z.spl~ ~override~ // spwi431z, [subspell of vitriolic sphere: splash damage] - only needs changing on obg2 but 1 header on EE
-    LPF ALTER_EFFECT INT_VAR match_opcode = 146 parameter2 = 0 END // obg2 fix
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 damage_rolls = 1 RET abil_delta END // +1d4/level
     PATCH_IF abil_delta > 0 BEGIN // if we added abilities
       READ_LONG  0x64 abil_off
@@ -963,9 +958,6 @@ COPY_EXISTING ~%WIZARD_SUN_FIRE%.spl~  ~override~ // spwi523, sunfire
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%.spl~ ~override~ // spwi524, shroud of flame  
-  PATCH_IF !enhanced_edition BEGIN // [obg2 fixes]
-    LPF ALTER_EFFECT INT_VAR match_opcode = 146 match_timing = 4 parameter2 = 0 END // obg2 fix
-  END   
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // just need new headers
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     SET fx_delta = 0
@@ -1071,7 +1063,6 @@ COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%b.spl~ ~override~ // spwi524b, [subspell 
 ACTION_IF !enhanced_edition BEGIN // doesn't need to be extended outside of obg2
 
   COPY_EXISTING ~%WIZARD_SHROUD_OF_FLAME%c.spl~ ~override~ // spwi524c, [subspell of shroud of flame]
-    LPF ALTER_EFFECT INT_VAR match_opcode = 146 parameter2 = 0 END // obg2 fix
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 level_cap = cap - 2 RET abil_delta END // just need new headers
     PATCH_IF abil_delta > 0 BEGIN // if we added abilities
       READ_LONG  0x64 abil_off
@@ -1124,14 +1115,9 @@ COPY_EXISTING ~%WIZARD_TENSERS_TRANSFORMATION%.spl~ ~override~ // spwi603, tense
     READ_LONG  0x64 abil_off
     READ_SHORT 0x68 abil_num
     READ_LONG  0x6a fx_off
-    // loop through all (not just new) abilities to fix THAC0 going negative on existing effects
-    FOR (index = 0 ; index < abil_num ; ++index) BEGIN // loop through new abilities only
-      PATCH_IF !index BEGIN                                        // first header level is always artificially set to 1
-        READ_SHORT  (abil_off + 0x10 + ((index + 1) * 0x28)) level // read level from second header
-        SET level -= 1                                             // and adjust
-      END ELSE BEGIN                                               // otherwise
-        READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
-      END
+    // existing thac0 addressed in _fixes, so loop through new stuff only
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level (not starting at abil 0)
       READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
       READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
       FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN

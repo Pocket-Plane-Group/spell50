@@ -32,6 +32,7 @@ ACTION_DEFINE_ASSOCIATIVE_ARRAY new_items BEGIN END
 ACTION_DEFINE_ASSOCIATIVE_ARRAY new_cres  BEGIN END
 
 INCLUDE ~spell50/lib/functions.tpa~      // functions that do the work
+INCLUDE ~spell50/lib/spell50_fixes.tpa~  // fixing some stuff so that bugs don't propagate into the new headers
 INCLUDE ~spell50/lib/spell50_arcane.tpa~ // mainline arcane spells
 INCLUDE ~spell50/lib/spell50_divine.tpa~ // mainline divine spells
 INCLUDE ~spell50/lib/spell50_misc.tpa~   // other spells
