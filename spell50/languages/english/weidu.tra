@@ -4,4 +4,7 @@
 @3 = ~40~
 @4 = ~30~
 @5 = ~20~
-@6 = ~Custom Value~
+@6 = ~Use Custom Spell Cap~
+@7 = ~Stopping installation: no valid value for 'cap' found.~
+@8 = ~Stopping installation: 'cap' is not set to an integer.~
+@9 = ~Stopping installation: 'cap' has been set outside the allowed range of 1-50.~

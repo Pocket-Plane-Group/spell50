@@ -1,0 +1,9 @@
+/*
+This file is here to enable players to set a custom spell cap. Set the 
+number below to a number between 1 and 50, then rename this file without
+the 'disabled' part. e.g. custom_cap.txt. If done correctly, you'll see
+an option during install for 'Custom Spell Cap' that will use the value
+you set below as the level cap. 
+*/
+
+OUTER_SET cap = 50
