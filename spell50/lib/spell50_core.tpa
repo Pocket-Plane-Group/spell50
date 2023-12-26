@@ -1,6 +1,6 @@
-// iwd uses a base round value of 7, not 6 like bg/bg2
+// oiwd uses a base round value of 7, not 6 like bg/bg2
 OUTER_SET round = 6
-ACTION_IF GAME_IS ~iwdee~ BEGIN OUTER_SET round = 7 END
+//ACTION_IF original_iwd BEGIN OUTER_SET round = 7 END
 
 // for the originals, spells with save-for-half damage have to have two damage opcodes whereas ee has one.
 // most of the time we have to adjust both op 12s on obg2 separately, but sometimes we can unify the 
@@ -52,7 +52,7 @@ ACTION_PHP_EACH new_effs AS params => source BEGIN
 END  
 
 ACTION_PHP_EACH new_items AS params => source BEGIN
-  ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.eff~ BEGIN
+  ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.itm~ BEGIN
   
     COPY_EXISTING ~%source%.itm~ ~override/%params_0%.itm~
       PATCH_IF params_1 BEGIN // spiritual hammer
