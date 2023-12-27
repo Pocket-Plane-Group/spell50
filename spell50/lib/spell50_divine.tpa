@@ -24,12 +24,14 @@ COPY_EXISTING ~%CLERIC_PROTECT_FROM_EVIL%.spl~ ~override~ // sppr107, protection
 ACTION_IF game_is_iwdee BEGIN 
 
   COPY_EXISTING ~%CLERIC_SANCTUARY%.spl~ ~override~ // sppr109, sanctuary
+                ~ca#ds109.spl~           ~override~ // [geomantic sorcerer] sanctuary
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) step_dur = (round * 1) END // 2 rounds + 1 round/level
     BUT_ONLY IF_EXISTS
 
 END
   
 COPY_EXISTING ~%CLERIC_SHILLELAGH%.spl~ ~override~ // sppr110, shillelagh
+              ~ca#ds110.spl~            ~override~ // [geomantic sorcerer] shillelagh
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) END // four rounds + 1 round/level
   BUT_ONLY IF_EXISTS
   
@@ -82,6 +84,7 @@ COPY_EXISTING ~%CLERIC_AID%.spl~ ~override~ // sppr201, aid
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_BARKSKIN%.spl~ ~override~ // sppr202, barkskin
+              ~ca#ds202.spl~          ~override~ // [geomantic sorcerer] barkskin
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) RET abil_delta END // four rounds + 1 round/level 
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // also gets an AC bump every four levels
@@ -103,6 +106,7 @@ COPY_EXISTING ~%CLERIC_BARKSKIN%.spl~ ~override~ // sppr202, barkskin
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_FLAME_BLADE%.spl~ ~override~ // sppr206, flame blade
+              ~ca#ds206.spl~             ~override~ // [geomantic sorcerer] flame blade
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) END // four rounds + 1 round/level
   END ELSE BEGIN
@@ -120,10 +124,12 @@ END
   
 COPY_EXISTING ~%CLERIC_RESIST_FIRE%.spl~          ~override~ // sppr210, resist fire and cold [bg2 symbol]
               ~%CLERIC_RESIST_FIRE_AND_COLD%.spl~ ~override~ // sppr216, resist fire/cold [iwdee symbol]
+              ~ca#ds210.spl~                      ~override~ // [geomantic sorcerer] resist fire/cold
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_SILENCE_15_FOOT%.spl~ ~override~ // sppr211, silence, 15' radius
+              ~ca#ds211.spl~                 ~override~ // [geomantic sorcerer] silence 15' radius
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (2 * round) END // two rounds/level
   BUT_ONLY IF_EXISTS
   
@@ -187,12 +193,14 @@ ACTION_IF game_is_iwdee BEGIN
 
   // i know, i know... goodberry is already ridiculously OP and then we make it better
   COPY_EXISTING ~%CLERIC_GOODBERRY%.spl~ ~override~ // sppr215, goodberry
+                ~ca#ds207.spl~           ~override~ // [geomantic sorcerer] goodberries
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 2 step_dur = 1 END // 1 day/level (op255 does duration in days)
     BUT_ONLY IF_EXISTS
   
 END
   
 COPY_EXISTING ~%CLERIC_CALL_LIGHTNING%.spl~ ~override~ // sppr302, call lightning
+              ~ca#ds302.spl~                ~override~ // [geomantic sorcerer] call lightning
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 base_dmg_rolls = 2 save_for_half = 1 RET abil_delta END // damage is 2d8 + 1d8 per level of caster
   // duration is one round/4 levels in bg2, 1 round/level in iwdee--both are handled by projectile
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -213,6 +221,7 @@ COPY_EXISTING ~%CLERIC_GLYPH_OF_WARDING%.spl~ ~override~ // sppr304, glyph of wa
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_HOLD_ANIMAL%.spl~ ~override~ // sppr305, hold animal
+              ~ca#ds305.spl~             ~override~ // [geomantic sorcerer] hold animal
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (2 * round) RET abil_delta END // two rounds/level
   PATCH_IF ((abil_delta > 0) AND (!enhanced_edition)) BEGIN // obg2 uses effs... le sigh
     READ_LONG  0x64 abil_off
@@ -237,6 +246,7 @@ COPY_EXISTING ~%CLERIC_HOLD_ANIMAL%.spl~ ~override~ // sppr305, hold animal
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_PROTECTION_FROM_FIRE%.spl~ ~override~ // sppr306, protection from fire
+              ~ca#ds306.spl~                      ~override~ // [geomantic sorcerer] protection from fire
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // 1 turn/level
   END ELSE BEGIN
@@ -293,6 +303,7 @@ END
 
 COPY_EXISTING ~%CLERIC_FREE_ACTION%.spl~ ~override~ // sppr403, free action
               ~cdslfre.spl~              ~override~ // divine remix innate
+              ~ca#ds403.spl~             ~override~ // [geomantic sorcerer] free action
   PATCH_IF !game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level  
   END ELSE BEGIN  
@@ -310,6 +321,7 @@ ACTION_IF game_is_iwdee BEGIN
 END
 
 COPY_EXISTING ~%CLERIC_PROTECTION_FROM_LIGHTNING%.spl~ ~override~ // sppr407, protection from lightning
+              ~ca#ds407.spl~                           ~override~ // [geomantic sorcerer] protection from lightning
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (5 * round) END // five rounds/level
   BUT_ONLY IF_EXISTS
   
@@ -327,6 +339,7 @@ COPY_EXISTING ~%CLERIC_DEATH_WARD%.spl~ ~override~ // sppr409, death ward
  ACTION_IF !game_is_iwdee BEGIN // iwdee poison is 20 damage over 20 seconds, flat
 
   COPY_EXISTING ~%CLERIC_POISON%.spl~ ~override~ // sppr411, poison
+                ~ca#ds411.spl~        ~override~ // [geomantic sorcerer] poison
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = 6 step_size = 2 damage_special = 1 damage_rolls = 2 RET abil_delta END // ups damage +2d8 every new header
     BUT_ONLY IF_EXISTS
     
@@ -505,6 +518,7 @@ COPY_EXISTING ~%CLERIC_MAGIC_RESISTANCE%.spl~ ~override~ // sppr509, magic resis
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_GREATER_COMMAND%.spl~ ~override~ // sppr512, greater command
+              ~ca#ds512.spl~                 ~override~ // [geomantic sorcerer] greater command
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -604,12 +618,14 @@ COPY_EXISTING ~%CLERIC_AERIAL_SERVANT%.spl~ ~override~ // sppr601, aerial servan
 
 COPY_EXISTING ~%CLERIC_CONJURE_FIRE_ELEMENTAL%.spl~ ~override~ // sppr605, conjure fire elemental
               ~a#kos11.spl~                         ~override~ // conjure fire elemental [divine remix]
+              ~ca#ds605.spl~                        ~override~ // [geomantic sorcerer] conjure fire elemental
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
   BUT_ONLY IF_EXISTS
 
 ACTION_IF game_is_iwdee BEGIN // doesn't scale in bg/bg2
 
   COPY_EXISTING ~%CLERIC_FIRE_SEEDS%.spl~ ~override~ // sppr606, fire seeds
+                ~ca#ds606.spl~            ~override~ // [geomantic sorcerer] fire seeds
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
     BUT_ONLY IF_EXISTS
 
@@ -624,6 +640,7 @@ COPY_EXISTING ~%CLERIC_SPIRITUAL_LOCK%.spl~ ~override~ // sppr650, spiritual loc
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_SHIELD_OF_THE_ARCHONS%.spl~ ~override~ // sppr701, shield of the archons
+              ~ca#ds701.spl~                       ~override~ // [geomantic sorcerer] shield of the archons
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) RET abil_delta END // 3 rounds/level
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // spell deflection = 1 level/2 caster levels
@@ -646,10 +663,12 @@ COPY_EXISTING ~%CLERIC_SHIELD_OF_THE_ARCHONS%.spl~ ~override~ // sppr701, shield
 
 COPY_EXISTING ~%CLERIC_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // sppr702, conjure earth elemental
               ~%CLERIC_CONJURE_AIR_ELEMENTAL%.spl~   ~override~ // conjure air elemental [divine remix]
+               ~ca#ds702.spl~                        ~override~ // [geomantic sorcerer] conjure earth elemental
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_FIRE_STORM%.spl~ ~override~ // sppr705, fire storm
+              ~ca#ds705.spl~            ~override~ // [geomantic sorcerer] fire storm
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_fixed = 1 base_dmg_rolls = 2 save_for_half = game_is_iwdee RET abil_delta END // damage is 2d8 + 1/level (save-for-half only on iwdee)
   BUT_ONLY IF_EXISTS
 
@@ -669,6 +688,7 @@ ACTION_IF !game_is_iwdee BEGIN // sunray and FoD don't scale in IWDEE
   END ELSE BEGIN // otherwise still using theold eff system
     
     COPY_EXISTING ~%CLERIC_SUNRAY%.spl~ ~override~ // sppr707, sunray
+                  ~ca#ds707.spl~        ~override~ // [geomantic sorcerer] sunray
       // don't patch automatically
       LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 RET abil_delta END // just create new headers
       PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -713,6 +733,7 @@ COPY_EXISTING ~%CLERIC_REGENERATE%.spl~ ~override~ // sppr711, regeneration
               ~%CLERIC_WITHER%.spl~     ~override~ // sppr740, wither
               ~bhaal1b.spl~             ~override~ // regeneration (unused?)
               ~cdilrgn.spl~             ~override~ // regeneration [divine remix]
+              ~ca#ds711.spl~            ~override~ // [geomantic sorcerer] regeneration
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // 1 round/2 levels
   BUT_ONLY IF_EXISTS
 

@@ -321,6 +321,7 @@ COPY_EXISTING ~%WIZARD_STRENGTH%.spl~ ~override~ // spwi214, strength
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%WIZARD_RAY_OF_ENFEEBLEMENT%.spl~ ~override~ // spwi221, ray of enfeeblement
+              ~ca#eray.spl~                      ~override~ // [geomantic sorcerer]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -882,6 +883,7 @@ COPY_EXISTING ~%WIZARD_SHADOW_DOOR%.spl~  ~override~ // spwi505, shadow door
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_HOLD_MONSTER%.spl~ ~override~ // spwi507, hold monster
+              ~ca#ehm.spl~                ~override~ // [geomantic sorcerer]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
