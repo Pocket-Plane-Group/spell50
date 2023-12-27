@@ -364,3 +364,6 @@ COPY_EXISTING ~cddkhmt.spl~ ~override~ // harm touch [sp collection]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 base_dmg_rolls = 2 END // 2d10 points of damage +1 point per level
   BUT_ONLY IF_EXISTS
   
+COPY ~khdusk01.spl~ ~override~ // Entropic Shield [sword and fist]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (round * 5) step_size = 4 END // 5 rounds/4 levels
+  BUT_ONLY IF_EXISTS

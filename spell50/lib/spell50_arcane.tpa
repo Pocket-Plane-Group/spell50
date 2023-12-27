@@ -234,6 +234,7 @@ END ELSE BEGIN // bg2/bg2
 END
 
 COPY_EXISTING ~%WIZARD_SLEEP%.spl~ ~override~ // spwi116, sleep
+              ~a#hex12.spl~        ~override~ // [sword and fist innate] sleep
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 5) END // 5 rounds/level
   BUT_ONLY IF_EXISTS
   
@@ -270,6 +271,7 @@ COPY_EXISTING ~%WIZARD_BLUR%.spl~ ~override~ // spwi201, blur
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_MELF_ACID_ARROW%.spl~ ~override~ // spwi211, melf's acid arrow
+              ~khdusk03.spl~                 ~override~ // [sword and fist innate] melf's acid arrow
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 3 RET abil_delta END // add headers; durations are a mess so do manually
   // add extra lingering acid damage for every header added  
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -315,6 +317,7 @@ COPY_EXISTING ~%WIZARD_MIRROR_IMAGE%.spl~ ~override~ // spwi212, mirror image
               ~spdm106.spl~               ~override~ // mirror image
               ~ca#mimg.spl~               ~override~ // [pnp celestials innate] Mirror Image
               ~cdwnmig.spl~               ~override~ // [sp collection innate] mirror image innate
+              ~a#hex22.spl~               ~override~ // [sword and fist innate] mirror image
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
   END ELSE BEGIN
@@ -444,6 +447,7 @@ COPY_EXISTING ~%WIZARD_HASTE%.spl~ ~override~ // spwi305, haste
               ~spra301.spl~        ~override~ // haste [stalker]
               ~a#re07.spl~         ~override~ // divine remix innate
               ~ikts7.spl~          ~override~ // [npc kit] Haste
+              ~khdusk05.spl~       ~override~ // [sword and fist innate] haste
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -478,6 +482,7 @@ ACTION_IF game_is_iwdee BEGIN
   COPY_EXISTING ~%WIZARD_PROTECTION_FROM_NORMAL_MISSILES%.spl~ ~override~ // spwi311, protection from normal missiles
                 ~spra303.spl~                                  ~override~ // protection from normal missiles
                 ~ca#pfnm.spl~                                  ~override~ // [pnp celestials innate] protection from normal missiles
+                ~a#hex31.spl~                                  ~override~ // [sword and fist innate] pfnm
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
     BUT_ONLY IF_EXISTS
 
@@ -495,6 +500,7 @@ COPY_EXISTING ~%WIZARD_VAMPIRIC_TOUCH%.spl~ ~override~ // spwi314, vampiric touc
               ~%INNATE_VAMPIRIC_TOUCH%.spl~ ~override~ // spin106, vampiric touch
               ~spdm108.spl~                 ~override~ // vampiric touch
               ~cddkvmt.spl~                 ~override~ // [sp collection innate] vampiric touch innate
+              ~a#hex32.spl~                 ~override~ // [sword and fist innate] vampiric touch
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // one hour, fixed
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // cast subspell 
@@ -637,6 +643,7 @@ COPY_EXISTING ~%WIZARD_IMPROVED_INVISIBILITY%.spl~   ~override~ // spwi405, impr
               ~spdr401.spl~                          ~override~ // improved invisibility [avenger]
               ~spdr401a.spl~                         ~override~ // save subspell of improved invisibility [avenger, obg2]
               ~ca#ii10.spl~                          ~override~ // [pnp celestials innate] Improved Invisibility 10 foot radius
+              ~a#hex41.spl~                          ~override~ // [sword and fist innate] improved invisibility
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * (game_is_iwdee + 3)) END // 1 round/level + 3 rounds [bg2] or 4 rounds [iwdee]
   BUT_ONLY IF_EXISTS
 
@@ -652,6 +659,7 @@ COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_2%.spl~ ~override~ // spwi407, monster 
 COPY_EXISTING ~%WIZARD_STONE_SKIN%.spl~ ~override~ // spwi408, stoneskin
               ~%DRAGON_STONE_SKIN%.spl~ ~override~ // spin694, stoneskin
               ~ohwi408.spl~             ~override~ // <no text>
+              ~khdusk07.spl~            ~override~ // [sword and fist innate] stoneskin
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // no duration changes, just need headers for extra skins
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // extra skin every two levels
@@ -683,6 +691,8 @@ END
 
 COPY_EXISTING ~%WIZARD_GREATER_MALISON%.spl~ ~override~ // spwi412, greater malison
               ~cdxvgml.spl~                  ~override~ // divine remix innate
+              ~a#hex04.spl~                  ~override~ // [sword and fist innate] greater malison
+              ~khdusk06.spl~                 ~override~ // [sword and fist innate] greater malison
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -974,6 +984,7 @@ ACTION_IF !game_is_iwdee BEGIN // these spells are present, but disabled, on iwd
 END
 
 COPY_EXISTING ~%WIZARD_PHANTOM_BLADE%.spl~ ~override~ // spwi518, phantom blade
+              ~khdusk09.spl~               ~override~ // [sword and fist innate] phantom blade
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -1146,6 +1157,7 @@ COPY_EXISTING ~%WIZARD_GLOBE_OF_INVULNERABILITY%.spl~ ~override~ // spwi602, glo
 
 COPY_EXISTING ~%WIZARD_TENSERS_TRANSFORMATION%.spl~ ~override~ // spwi603, tenser's transformation
               ~a#tem11.spl~                         ~override~ // tenser's transformation [divine remix]
+              ~khdusk10.spl~                        ~override~ // [sword and fist innate] tenser's transformation
   LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // base thac0 improves 1/level to a max of 0
@@ -1349,6 +1361,7 @@ COPY_EXISTING ~%WIZARD_ACID_STORM%.spl~ ~override~ // spwi706, acid storm
 ACTION_IF !game_is_iwdee BEGIN
 
   COPY_EXISTING ~%WIZARD_MORDENKAINENS_SWORD%.spl~ ~override~ // spwi716, mordenkainen's sword
+                ~khdusk12.spl~                     ~override~ // [sword and fist innate] mordenkainen's sword
     LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
     BUT_ONLY IF_EXISTS
 
@@ -1356,6 +1369,7 @@ END
 
 COPY_EXISTING ~%WIZARD_MORDENKAINENS_SWORD_IWD%.spl~ ~override~ // spwi726, mordenkainen's force blade [iwdspells, basically iwd's sword]
               ~%WIZARD_MORDENKAINENS_SWORD%.spl~     ~override~ // spwi716, mordenkainen's sword [iwdee]
+              ~khdusk12.spl~                         ~override~ // [sword and fist innate] mordenkainen's sword
   PATCH_IF game_is_iwdee OR ("%SOURCE_RES%" STRING_COMPARE_CASE "%WIZARD_MORDENKAINENS_SWORD%") BEGIN // don't use this patch on bg2 mordy sword (see above)
     LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
     PATCH_IF abil_delta > 0 BEGIN // if we added abilities

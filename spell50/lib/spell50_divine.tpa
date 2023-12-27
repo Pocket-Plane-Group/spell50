@@ -18,6 +18,7 @@ COPY_EXISTING ~#reciteb.spl~ ~override~ // [no name] subspell of recitation, spp
 
 COPY_EXISTING ~%CLERIC_PROTECT_FROM_EVIL%.spl~ ~override~ // sppr107, protection from evil
               ~%CLERIC_PROTECT_FROM_GOOD%.spl~ ~override~ // sppr199, protection from good [iwdee]
+              ~A#BLKPG.spl~                    ~override~ // [sword and fist] protection from good
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) END // three rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -773,6 +774,7 @@ COPY_EXISTING ~%CLERIC_SUMMON_DEVA%.spl~            ~override~ // sppr726, summo
               ~%PALADIN_SUMMON_DEVA%.spl~           ~override~ // spcl923, summon deva
               ~%BLACKGUARD_SUMMON_FALLEN_DEVA%.spl~ ~override~ // spcl935, summon fallen deva
               ~cdsmdva.spl~                         ~override~ // [sp collection innate] summon deva innate
+              ~a#blk91.spl~                         ~override~ // [sword and fist innate] summon deva
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 4) END // four rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
