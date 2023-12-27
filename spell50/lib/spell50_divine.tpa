@@ -246,7 +246,7 @@ ACTION_IF game_is_iwdee BEGIN
   
   COPY_EXISTING ~%CLERIC_HOLY_SMITE%.spl~    ~override~ // sppr313, holy smite
                 ~%CLERIC_UNHOLY_BLIGHT%.spl~ ~override~ // sppr314, unholy blight
-    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 damage_special = 1 damage_rolls = 1 stepsize = 2 END // + 1d6/2 levels
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 1000 damage_special = 1 damage_rolls = 1 step_size = 2 END // + 1d6/2 levels
 
 END ELSE BEGIN 
     

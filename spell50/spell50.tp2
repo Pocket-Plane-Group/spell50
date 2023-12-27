@@ -99,7 +99,7 @@ INCLUDE ~spell50/lib/spell50_core.tpa~
 
 BEGIN @6 DESIGNATED 4
 SUBCOMPONENT @1 // extend spells
-REQUIRE_PREDICATE FILE_EXISTS ~spell50/custom_cap.txt~
+REQUIRE_PREDICATE FILE_EXISTS ~spell50/custom_cap.txt~ @10
 LABEL ~cd_spell-custom~
 
 INCLUDE ~spell50/custom_cap.txt~

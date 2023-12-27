@@ -1,10 +1,13 @@
-@0 = ~DLC Merger is required before mods can be installed on this game. Check the readme for more information and a link to download DLC Merger.~
-@1 = ~Extend Many Spells to Level:~
-@2 = ~50~
-@3 = ~40~
-@4 = ~30~
-@5 = ~20~
-@6 = ~Use Custom Spell Cap~
-@7 = ~Stopping installation: no valid value for 'cap' found.~
-@8 = ~Stopping installation: 'cap' is not set to an integer.~
-@9 = ~Stopping installation: 'cap' has been set outside the allowed range of 1-50.~
+// this file encoded in UTF8
+
+ @0 = ~DLC Merger is required before mods can be installed on this game. Check the readme for more information and a link to download DLC Merger.~
+ @1 = ~Extend Many Spells to Level:~
+ @2 = ~50~
+ @3 = ~40~
+ @4 = ~30~
+ @5 = ~20~
+ @6 = ~Use Custom Spell Cap~
+ @7 = ~Stopping installation: no valid value for 'cap' found.~
+ @8 = ~Stopping installation: 'cap' is not set to an integer.~
+ @9 = ~Stopping installation: 'cap' has been set outside the allowed range of 1-50.~
+@10 = ~No custom spell cap found.~

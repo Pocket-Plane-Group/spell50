@@ -1,2 +1,71 @@
+// this file encoded in UTF8
+// these strings will be converted down for obg2 istallations
+
+/////                                                  \\\\\
+///// new strings                                      \\\\\
+/////                                                  \\\\\
+
 // this is bg2 string #32858, but replace the number--just the number--with %mr%. If it has a trailing %, leave that intact (like below)
 @1000 = ~Magic Resistance Lowered by %mr%%~ // for magic resistance spell
+
+/////                                                  \\\\\
+///// spell description text to be removed             \\\\\
+/////                                                  \\\\\
+
+@2000 = ~~ // this string intentionally blank - don't delete, as it is needed
+
+// the next batch of strings are from existing spell descriptions and are being removed from the descriptions
+// because they describe a level cap that is being removed. 
+
+// sourced from bg2ee
+@2001 = ~ (up to a maximum of 10d4)~ // bg2ee #103072, spirit fire (sppr450)
+@2002 = ~ (up to a maximum of 5d8 damage)~ // from bg2ee #100350, Sun Soulray (spcl236) description
+@2003 = ~ (maximum damage of 10d6)~ // bg2ee #12179, lightning bolt (spwi308) description
+@2004 = ~, up to a maximum of 8d8 total damage at 18th level~ // bg2ee #100381, dragon disciple breath weapon (spdd03) description
+@2005 = ~, to a maximum drain of 6d6 for a 12th-level caster~ // bg2ee #12190, spwi314 vampiric touch description
+@2006 = ~, up to a total of +3 to the attack roll and +3 to the damage roll for a 13th-level caster~ // bg2ee #12321, spiritual hammer (sppr213)
+@2007 = ~, up to a maximum of 40% at 20th level~ // bg2ee #26784, magic resistance (sppr509)
+@2008 = ~, to a maximum of 1d3+20 points of fire damage~ // bg2ee #12141, burning hands (spwi103)
+@2009 = ~ up to five~ // bg2ee 12180, magic missile (spwi112)
+@2010 = ~ (up to a maximum of 10d6)~ // bg2ee 12177, fireball (spwi304)
+@2011 = ~—up to 6th-level spells at 18th level~ // bg2ee 25943, contingency (spwi617)
+
+// sourced from iwdee
+@2012 = ~ up to a maximum of Armor Class of -1 at 30th level~ // iwdee 12209, sppr202 barkskin
+@2013 = ~, up to a maximum of +3 at 13th level~ // iwdee 12321, sppr213 spiritual hammer 
+@2014 = ~ (capped at 11 bolts)~ // iwdee 12212, sppr302 call lightning
+@2015 = ~, up to a maximum of 5d6 at level 10~ // iwdee 3963, sppr313 holy smite
+@2016 = ~, up to a maximum of 60%~ // iwdee 26784, sppr509 magic resistance
+@2017 = ~, to a maximum of 1d3 + 20 points of fire damage~ // iwdee 12141, spwi103 burning hands
+@2018 = ~, up to a maximum of 8d3 points at level 8~ // iwdee 6393, spwi204 snilloc's snowball swarm
+@2019 = ~, up to a maximum of 8d6 points at level 8~ // iwdee 6393, spwi204 snilloc's snowball swarm
+@2020 = ~ (maximum of +30)~ // iwdee 24812, spwi328 lance of disruption
+@2021 = ~, to a maximum of 12d4 points of damage~ // iwdee 24245, spwi432 vitriolic sphere
+@2022 = ~, up to a maximum of 15d6~ // iwdee 24915, spwi523 sunfire
+
+// sourced from obg2
+@2023 = ~, to a maximum drain of 6-36 for a 12th-level caster~ // obg2 #12190, spwi314 vampiric touch description
+@2024 = ~ up to a maximum of 40% at 20th level~ // obg2 #26784, magic resistance (sppr509)
+@2025 = ~, up to 18th level or 6th-level spells~ // obg2 25943, contingency (spwi617)
+
+/////                                                  \\\\\
+///// spell description text to be replaced            \\\\\
+/////                                                  \\\\\
+
+// the next batch of strings are from existing spell descriptions. The first line of each pair is from an
+// existing spell description, and the secon string is new text replacing it. 
+@3001 = ~and 5 rounds at level 25~ // from bg2ee #100355, Flaming Fists (spcl238) description
+@3002 = ~and an additional round every ten levels after that~
+
+@3003 = ~17+ level: 8d8 + 6/round~ // from bg2ee 6065, poison (sppr411)
+@3004 = ~17+ level: additional 2d8 per two levels + 6/round~
+
+@3005 = ~ up to a total of 5 at 9th level~ // bg2ee 12180, magic missile (spwi112)
+@3006 = ~, and a maximum of five missiles at 9th level~
+@3007 = ~ and so on~
+
+@3008 = ~, to a maximum of seven missiles at 25th level~ // iwdee 24246, spwi430 mordenkainen's force missiles
+@3009 = ~, to a maximum of 11 missiles at 37th level~
+
+@3010 = ~17+ level:  8d8  +  6/round~ // from obg2 6065, poison (sppr411)
+@3011 = ~17+ level: additional 2d8 per two levels  +  6/round~

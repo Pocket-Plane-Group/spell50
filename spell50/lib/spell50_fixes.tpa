@@ -251,7 +251,7 @@ END ELSE BEGIN
 
   // SPWI622 : The duration before level 12 is longer than from level 12 onwards
   COPY_EXISTING ~%WIZARD_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // spwi622, conjure earth elemental
-    LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 840 duration = 660 END
+    LPF ALTER_EFFECT INT_VAR silent = 1 header = 0 match_duration = 840 duration = 660 END
     BUT_ONLY IF_EXISTS
 
   // Summon (Dark) Planetar (spwi923, spwi924) have the wrong duration on its level 1 header; alternatively they're missing eight headers between that header and the second.
