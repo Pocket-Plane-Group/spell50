@@ -429,6 +429,7 @@ COPY_EXISTING ~%WIZARD_HASTE%.spl~ ~override~ // spwi305, haste
               ~%MAZZY_HASTE%.spl~  ~override~ // spin828, haste
 //            ~%GOLEM_HASTE%.spl~  ~override~ // spin978, golem haste - trimmed down to one level in _fixes
               ~spra301.spl~        ~override~ // haste [stalker]
+              ~a#re07.spl~         ~override~ // divine remix innate
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -565,6 +566,7 @@ COPY_EXISTING ~%WIZARD_PROTECTION_FROM_FIRE%.spl~ ~override~ // spwi319, protect
 
 COPY_EXISTING ~%WIZARD_HOLD_UNDEAD%.spl~    ~override~ // spwi324, hold undead
               ~%LATHANDER_HOLD_UNDEAD%.spl~ ~override~ // spcl742, hold undead
+              ~cdlthun.spl~                 ~override~ // hold undead innate [divine remix innate]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -594,6 +596,7 @@ COPY_EXISTING ~%WIZARD_LANCE_OF_DISRUPTION%.spl~ ~override~ // spwi327, lance of
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_CONFUSION%.spl~ ~override~ // spwi401, confusion
+              ~a#sha09.spl~            ~override~ // divine remix innate
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) END // 2 rounds + 1 round/level
   END ELSE BEGIN
@@ -605,6 +608,7 @@ COPY_EXISTING ~%WIZARD_FIRE_SHIELD_BLUE%.spl~ ~override~ // spwi403, fire shield
               ~%WIZARD_FIRE_SHIELD_RED%.spl~  ~override~ // spwi418, fire shield (red)
               ~%SUN_SOUL_GREATER_SUN%.spl~    ~override~ // spcl237, greater sun
               ~1tarss.spl~                    ~override~ // fireshield (blue)
+              ~a#kos07.spl~                   ~override~ // fire shield (red) [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -653,12 +657,14 @@ COPY_EXISTING ~%WIZARD_STONE_SKIN%.spl~ ~override~ // spwi408, stoneskin
 ACTION_IF !game_is_iwdee BEGIN
 
   COPY_EXISTING ~%WIZARD_EMOTION_HOPELESSNESS%.spl~ ~override~ // spwi411, emotion: hopelessness
+                ~nmsun07.spl~                       ~override~ // divine remix innate
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) END // 9 rounds + 1 round/level after 7th (basically 2 rounds + 1 round/level)
     BUT_ONLY IF_EXISTS
 
 END
 
 COPY_EXISTING ~%WIZARD_GREATER_MALISON%.spl~ ~override~ // spwi412, greater malison
+              ~cdxvgml.spl~                  ~override~ // divine remix innate
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -668,6 +674,7 @@ COPY_EXISTING ~%WIZARD_POLYMORPH_SELF%.spl~ ~override~ // spwi416, polymorph sel
 
 // completely different spell obg2 vs. EE, but the patch below won't change it on obg2 (fixed duration on only one header) so we're good
 COPY_EXISTING ~%WIZARD_ENCHANTED_WEAPON%.spl~ ~override~ // spwi417, enchanted weapon
+              ~a#fey07.spl~                   ~override~ // enchanted weapon [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 5) END // 5 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -721,6 +728,7 @@ COPY_EXISTING ~%WIZARD_FAR_SIGHT%.spl~ ~override~ // spwi424, farsight
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%WIZARD_EYE%.spl~ ~override~ // spwi425, wizard eye
+              ~a#re0e.spl~       ~override~ // wizard eye [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -879,6 +887,8 @@ COPY_EXISTING ~%WIZARD_HOLD_MONSTER%.spl~ ~override~ // spwi507, hold monster
 
 COPY_EXISTING ~%WIZARD_CHAOS%.spl~ ~override~ // spwi508, chaos
               ~spdr501.spl~        ~override~ // chaos [avenger]
+              ~a#cyr09.spl~        ~override~ // chaos [divine remix]
+              ~a#tem09.spl~        ~override~ // chaos [divine remix]
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   END ELSE BEGIN
@@ -887,6 +897,7 @@ COPY_EXISTING ~%WIZARD_CHAOS%.spl~ ~override~ // spwi508, chaos
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_PROTECTION_FROM_NORMAL_WEAPONS%.spl~ ~override~ // spwi511, protection from normal weapons
+              ~cdhmpnw.spl~                                 ~override~ // protection from normal weapons innate [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -954,6 +965,8 @@ COPY_EXISTING ~%WIZARD_MINOR_SPELL_TURNING%.spl~ ~override~ // spwi522, minor sp
 
 COPY_EXISTING ~%WIZARD_SUN_FIRE%.spl~  ~override~ // spwi523, sunfire
               ~%WIZARD_SUN_FIRE%d.spl~ ~override~ // spwi523d, [subspell of sunfire, ee]
+              ~a#kos09.spl~            ~override~ // divine remix innate
+              ~cdslsun.spl~            ~override~ // sunfire (innate) [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_rolls = 1 save_for_half = 1 END // 1d6/level
   BUT_ONLY IF_EXISTS
 
@@ -1109,6 +1122,7 @@ COPY_EXISTING ~%WIZARD_GLOBE_OF_INVULNERABILITY%.spl~ ~override~ // spwi602, glo
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_TENSERS_TRANSFORMATION%.spl~ ~override~ // spwi603, tenser's transformation
+              ~a#tem11.spl~                         ~override~ // tenser's transformation [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // 1 round/level
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // base thac0 improves 1/level to a max of 0
@@ -1139,6 +1153,7 @@ COPY_EXISTING ~%WIZARD_PROTECTION_FROM_MAGIC_ENERGY%.spl~ ~override~ // spwi606,
 
 COPY_EXISTING ~%WIZARD_MISLEAD%.spl~  ~override~ // spwi607, mislead
               ~%WIZARD_MISLEAD%a.spl~ ~override~ // spwi607a, save subspell of mislead [obg2]
+              ~nmsun11.spl~           ~override~ // mislead [divine remix innate]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -1175,6 +1190,7 @@ ACTION_IF !game_is_iwdee BEGIN // doable in iwdee, but would result in a 50x lig
 
   COPY_EXISTING ~%WIZARD_CHAIN_LIGHTNING%.spl~  ~override~ // spwi615, chain lightning
                 ~spdr601.spl~                   ~override~ // chain lightning [avenger]
+                ~cdtlcnl.spl~                   ~override~ // chain lightning innate [divine remix]
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_special = 1 damage_rolls = 1 save_for_half = 2 step_size = 2 END // 1d6/2 levels, save for half
     BUT_ONLY IF_EXISTS
 
@@ -1215,6 +1231,7 @@ COPY_EXISTING ~%WIZARD_CONJURE_FIRE_ELEMENTAL%.spl~  ~override~ // spwi620, conj
               ~%WIZARD_CONJURE_AIR_ELEMENTAL%.spl~   ~override~ // spwi621, conjure air elemental
               ~%WIZARD_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // spwi622, conjure earth elemental
               ~%WIZARD_CONJURE_WATER_ELEMENTAL%.spl~ ~override~ // spwi633, conjure water elemental
+              ~cdslair.spl~                          ~override~ // conjure air elemental (innate) [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 18 step_dur = (round * 10) END // 1 turn/level
   BUT_ONLY IF_EXISTS
 
@@ -1247,6 +1264,7 @@ COPY_EXISTING ~%WIZARD_SPELL_TURNING%.spl~ ~override~ // spwi701, spell turning
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_PROTECTION_FROM_THE_ELEMENTS%.spl~ ~override~ // spwi702, protection from the elements
+              ~cdslpfe.spl~                               ~override~ // protection from the elements (innate) [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 

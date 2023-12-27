@@ -34,6 +34,7 @@ COPY_EXISTING ~%CLERIC_SHILLELAGH%.spl~ ~override~ // sppr110, shillelagh
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_ARMOR_OF_FAITH%.spl~ ~override~ // sppr111, armor of faith
+              ~a#justaf.spl~                ~override~ // 'armour of faith' [divine remix innate]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) RET abil_delta END // three rounds + 1 round/level
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // absorbs 5% of damage every five levels
@@ -55,7 +56,11 @@ COPY_EXISTING ~%CLERIC_ARMOR_OF_FAITH%.spl~ ~override~ // sppr111, armor of fait
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_FAERIE_FIRE%.spl~ ~override~ // sppr116
-  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (4 * round) END // four rounds/level
+  PATCH_IF ((MOD_IS_INSTALLED ~divine_remix/setup-divine_remix~ ~10~) OR (MOD_IS_INSTALLED ~divine_remix/setup-divine_remix~ ~11~)) BEGIN
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_dur = (1 * round) step_size = 5 END // four rounds + 1 round/5 levels
+  END ELSE BEGIN // sod
+    LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (4 * round) END // four rounds/level
+  END  
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_SUNSCORCH%.spl~  ~override~ // sppr118, sunscorch [iwdee/iwdspells]
@@ -203,6 +208,7 @@ COPY_EXISTING ~%CLERIC_CALL_LIGHTNING%.spl~ ~override~ // sppr302, call lightnin
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_GLYPH_OF_WARDING%.spl~ ~override~ // sppr304, glyph of warding
+              ~cdhmglp.spl~                   ~override~ // glyph of warding innate [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 END // damage is 1d4/level, save negates
   BUT_ONLY IF_EXISTS
   
@@ -286,6 +292,7 @@ END ELSE BEGIN
 END
 
 COPY_EXISTING ~%CLERIC_FREE_ACTION%.spl~ ~override~ // sppr403, free action
+              ~cdslfre.spl~              ~override~ // divine remix innate
   PATCH_IF !game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level  
   END ELSE BEGIN  
@@ -307,6 +314,7 @@ COPY_EXISTING ~%CLERIC_PROTECTION_FROM_LIGHTNING%.spl~ ~override~ // sppr407, pr
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_PROTECTION_FROM_EVIL_10_FOOT%.spl~ ~override~ // sppr408, protection from evil, 10' radius
+              ~%CLERIC_PROTECTION_FROM_GOOD_10_FOOT%.spl~ ~override~ // protection from good, 10' radius [divine remix]
               ~ohprgd10.spl~                              ~override~ // protection from good, 10' radius
               ~spcl233.spl~                               ~override~ // protection from evil, 10' radius
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
@@ -326,6 +334,7 @@ END
   
 COPY_EXISTING ~%CLERIC_HOLY_POWER%.spl~ ~override~ // sppr412, holy power
               ~ohtmps1.spl~             ~override~ // holy power
+              ~a#tem07.spl~             ~override~ // divine remix innate
   LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // duration is default 1 round/level
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // 1 hp/level bonus plus fighter thac0
@@ -351,6 +360,7 @@ COPY_EXISTING ~%CLERIC_HOLY_POWER%.spl~ ~override~ // sppr412, holy power
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_FAR_SIGHT%.spl~ ~override~ // sppr415, farsight
+              ~cdhmfst.spl~            ~override~ // farsight innate [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (3 * round) END // three rounds + 1 round/level  
   BUT_ONLY IF_EXISTS
   
@@ -415,6 +425,8 @@ COPY_EXISTING ~%CLERIC_SPIRIT_FIRE%.spl~  ~override~ // sppr450, spirit fire
                 ~%CLERIC_FLAME_STRIKE%d.spl~ ~override~ // [flame strike damage moved here w/ iwdspells]
                 ~%DACE_FLAME%.spl~           ~override~ // spin799 - only one level in EE
                 ~%DACE_FLAME%d.spl~          ~override~ // spin799d, [subspell of flame strike]
+                ~nmsun09.spl~                ~override~ // flame strike [divine remix innate]
+                ~cdltflm.spl~                ~override~ // flame strike [divine remix innate]
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 save_for_half = 1 END // damage is 1d8/level 
     BUT_ONLY IF_EXISTS
 
@@ -521,6 +533,7 @@ COPY_EXISTING ~%CLERIC_RIGHTEOUS_MAGIC%.spl~ ~override~ // sppr513, righteous ma
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_MASS_CURE%.spl~ ~override~ // sppr514, mass cure
+              ~a#re11.spl~             ~override~ // mass cure [divine remix]
               ~bhaal1a.spl~            ~override~ // mass healing (unused?)
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 RET abil_delta END // no duration change, just need addt'l headers
   PATCH_IF ("%SOURCE_RES%" STRING_COMPARE_CASE ~%CLERIC_MASS_CURE%~ = 0) BEGIN SET multiply = 1 END ELSE BEGIN SET multiply = 2 END
@@ -590,6 +603,7 @@ COPY_EXISTING ~%CLERIC_AERIAL_SERVANT%.spl~ ~override~ // sppr601, aerial servan
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_CONJURE_FIRE_ELEMENTAL%.spl~ ~override~ // sppr605, conjure fire elemental
+              ~a#kos11.spl~                         ~override~ // conjure fire elemental [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
   BUT_ONLY IF_EXISTS
 
@@ -631,6 +645,7 @@ COPY_EXISTING ~%CLERIC_SHIELD_OF_THE_ARCHONS%.spl~ ~override~ // sppr701, shield
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%CLERIC_CONJURE_EARTH_ELEMENTAL%.spl~ ~override~ // sppr702, conjure earth elemental
+              ~%CLERIC_CONJURE_AIR_ELEMENTAL%.spl~   ~override~ // conjure air elemental [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (10 * round) END // one turn/level
   BUT_ONLY IF_EXISTS
 
@@ -697,6 +712,7 @@ COPY_EXISTING ~%CLERIC_CONFUSION%.spl~ ~override~ // sppr709, confusion
 COPY_EXISTING ~%CLERIC_REGENERATE%.spl~ ~override~ // sppr711, regeneration
               ~%CLERIC_WITHER%.spl~     ~override~ // sppr740, wither
               ~bhaal1b.spl~             ~override~ // regeneration (unused?)
+              ~cdilrgn.spl~             ~override~ // regeneration [divine remix]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // 1 round/2 levels
   BUT_ONLY IF_EXISTS
 
@@ -758,4 +774,58 @@ COPY_EXISTING ~%CLERIC_AURA_OF_FLAMING_DEATH%.spl~ ~override~ // sppr730, aura o
 
 COPY_EXISTING ~%CLERIC_IMPERVIOUS_SANCTITY_OF_MIND%.spl~ ~override~ // sppr735, impervious sanctity of mind
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~%CLERIC_IMPREGNABLE_MIND%.spl~ ~override~ // impregnable mind (divine remix)
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 10) step_dur = (round * 1) END // 1 turn + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_RESIST_ACID_AND_CORROSION%.spl~ ~override~ // resist acid and corrosion [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~%CLERIC_STRENGTH_OF_STONE%.spl~ ~override~ // strength of stone [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~cdslmsd.spl~ ~override~ // moon shield [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~cdilend.spl~  ~override~ // endurance of ilmater [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) END // 1 round + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~a#cyr07.spl~ ~override~ // dead blast [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 base_dmg_rolls = 4 END // 4d8 damage +1/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~a#fera03.spl~ ~override~ // 'Call of the Wild' innate [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~cdtldst.spl~ ~override~ // destructive blow [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+
+COPY_EXISTING ~cdshar2.spl~ ~override~ // dark bolt [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // permanent, just make headers
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // one blade created/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // oddly, energy blades has full headers for levels 1-20
+        END        
+      END  
+    END
+  END
   BUT_ONLY IF_EXISTS
