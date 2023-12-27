@@ -90,6 +90,7 @@ COPY_EXISTING ~%WIZARD_FRIENDS%.spl~ ~override~ // spwi107, friends
 
 // first, extend MM out to maximum 11 missile projectile
 COPY_EXISTING ~%WIZARD_MAGIC_MISSILE%.spl~ ~override~ // spwi112, magic missile
+              ~cdwnmgm.spl~                ~override~ // [sp collection innate] magic missile innate
   PATCH_IF cap > 20 BEGIN SET mm_cap = 21 END ELSE BEGIN SET mm_cap = cap END
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_size = 2 level_cap = mm_cap RET abil_delta END // fixed duration, extra missile every two levels
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -113,6 +114,7 @@ ACTION_IF cap > 22 BEGIN // don't need to bother further if cap < 23
   END
 
   COPY_EXISTING ~%WIZARD_MAGIC_MISSILE%.spl~ ~override~ // spwi112, magic missile
+                ~cdwnmgm.spl~                ~override~ // [sp collection innate] magic missile innate
     // to overcome projectile limitation, MM will now cast multiple versions of itself (EE) or copy (obg2)
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_size = 2 RET abil_delta END // fixed duration, extra missile every two levels
     PATCH_IF abil_delta > 0 BEGIN // if we added abilities
@@ -172,6 +174,7 @@ ACTION_IF cap > 22 BEGIN // don't need to bother further if cap < 23
 END
 
 COPY_EXISTING ~%WIZARD_PROTECTION_FROM_EVIL%.spl~ ~override~ // spwi113, protection from evil
+              ~ca#pevil.spl~                      ~override~ // [pnp celestials innate] protection from evil
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 2) END // 2 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -182,6 +185,7 @@ ACTION_IF game_is_iwdee BEGIN // doesn't scale on bg/bg2
     BUT_ONLY IF_EXISTS
 
   COPY_EXISTING ~%WIZARD_SHOCKING_GRASP%.spl~ ~override~ // spwi115, shocking grasp - direct damage spell in iwdee
+                ~cdwnshg.spl~                 ~override~ // [sp collection innate] shocking grasp innate
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dmg_rolls = 1 damage_fixed = 1 END // 1d8 + 1/level
     BUT_ONLY IF_EXISTS
 
@@ -194,12 +198,14 @@ END ELSE BEGIN // bg2/bg2
       BUT_ONLY IF_EXISTS
 
     COPY_EXISTING ~%WIZARD_SHOCKING_GRASP%.spl~ ~override~ // spwi115, shocking grasp
+                  ~cdwnshg.spl~                 ~override~ // [sp collection innate] shocking grasp innate
       LPF CD_LEVEL_SELECT-O-MATIC END // touch lasts one round/level
       BUT_ONLY IF_EXISTS
       
   END ELSE BEGIN // one item per spell level
 
     COPY_EXISTING ~%WIZARD_SHOCKING_GRASP%.spl~ ~override~ // spwi115, shocking grasp
+                  ~cdwnshg.spl~                 ~override~ // [sp collection innate] shocking grasp innate
       LPF CD_LEVEL_SELECT-O-MATIC RET abil_delta END // touch lasts one round/level
       PATCH_IF abil_delta > 0 BEGIN // if we added abilities 
         SPRINT leading ~0~
@@ -245,6 +251,7 @@ END
 //  BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_REFLECTED_IMAGE%.spl~ ~override~ // spwi120, reflected image
+              ~a#sd3.spl~                    ~override~ // [song and silence]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -258,6 +265,7 @@ COPY_EXISTING ~%WIZARD_DANCING_LIGHTS%.spl~ ~override~ // spwi126, dancing light
 
 COPY_EXISTING ~%WIZARD_BLUR%.spl~ ~override~ // spwi201, blur
               ~spdm102.spl~       ~override~ // blur
+              ~cdwnblr.spl~       ~override~ // [sp collection innate] blur innate
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * (4 - game_is_iwdee)) step_dur = (round * (1 + game_is_iwdee)) END // 4 rounds + 2 rounds/level OR 3 rounds + 1 rounds/level [iwdee]
   BUT_ONLY IF_EXISTS
 
@@ -302,9 +310,11 @@ COPY_EXISTING ~%WIZARD_MELF_ACID_ARROW%.spl~ ~override~ // spwi211, melf's acid 
   END  
   BUT_ONLY IF_EXISTS
   
-COPY_EXISTING ~%WIZARD_MIRROR_IMAGE%.spl~      ~override~ // spwi212, mirror image
-              ~ohbwi212.spl~                   ~override~ // mirror image
-              ~spdm106.spl~                    ~override~ // mirror image
+COPY_EXISTING ~%WIZARD_MIRROR_IMAGE%.spl~ ~override~ // spwi212, mirror image
+              ~ohbwi212.spl~              ~override~ // mirror image
+              ~spdm106.spl~               ~override~ // mirror image
+              ~ca#mimg.spl~               ~override~ // [pnp celestials innate] Mirror Image
+              ~cdwnmig.spl~               ~override~ // [sp collection innate] mirror image innate
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
   END ELSE BEGIN
@@ -467,6 +477,7 @@ ACTION_IF game_is_iwdee BEGIN
 
   COPY_EXISTING ~%WIZARD_PROTECTION_FROM_NORMAL_MISSILES%.spl~ ~override~ // spwi311, protection from normal missiles
                 ~spra303.spl~                                  ~override~ // protection from normal missiles
+                ~ca#pfnm.spl~                                  ~override~ // [pnp celestials innate] protection from normal missiles
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 10) END // 1 turn/level
     BUT_ONLY IF_EXISTS
 
@@ -483,6 +494,7 @@ COPY_EXISTING ~%WIZARD_SKULL_TRAP%.spl~ ~override~ // spwi313, skull trap
 COPY_EXISTING ~%WIZARD_VAMPIRIC_TOUCH%.spl~ ~override~ // spwi314, vampiric touch
               ~%INNATE_VAMPIRIC_TOUCH%.spl~ ~override~ // spin106, vampiric touch
               ~spdm108.spl~                 ~override~ // vampiric touch
+              ~cddkvmt.spl~                 ~override~ // [sp collection innate] vampiric touch innate
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 step_size = 2 RET abil_delta END // one hour, fixed
   PATCH_IF abil_delta > 0 BEGIN // if we added abilities
     // cast subspell 
@@ -601,6 +613,7 @@ COPY_EXISTING ~%WIZARD_LANCE_OF_DISRUPTION%.spl~ ~override~ // spwi327, lance of
 
 COPY_EXISTING ~%WIZARD_CONFUSION%.spl~ ~override~ // spwi401, confusion
               ~a#sha09.spl~            ~override~ // divine remix innate
+              ~a!ds7.spl~              ~override~ // [song and silence]
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 2) END // 2 rounds + 1 round/level
   END ELSE BEGIN
@@ -623,6 +636,7 @@ COPY_EXISTING ~%WIZARD_IMPROVED_INVISIBILITY%.spl~   ~override~ // spwi405, impr
               ~ohbwi405.spl~                         ~override~ // improved invisibility (ee only, hence no 'a' spell)
               ~spdr401.spl~                          ~override~ // improved invisibility [avenger]
               ~spdr401a.spl~                         ~override~ // save subspell of improved invisibility [avenger, obg2]
+              ~ca#ii10.spl~                          ~override~ // [pnp celestials innate] Improved Invisibility 10 foot radius
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * (game_is_iwdee + 3)) END // 1 round/level + 3 rounds [bg2] or 4 rounds [iwdee]
   BUT_ONLY IF_EXISTS
 
@@ -882,11 +896,14 @@ COPY_EXISTING ~%WIZARD_MONSTER_SUMMONING_3%.spl~ ~override~ // spwi504, monster 
 
 COPY_EXISTING ~%WIZARD_SHADOW_DOOR%.spl~  ~override~ // spwi505, shadow door
               ~%WIZARD_SHADOW_DOOR%a.spl~ ~override~ // spwi505, save subspell of shadow door [obg2]
+              ~a#sd5.spl~                 ~override~ // [song and silence]
+              ~cdwnshd.spl~               ~override~ // [sp collection innate] shadow door innate
   LPF CD_LEVEL_SELECT-O-MATIC END // 9 rounds + 1 round/level after 9th (effectively 1 round/level)
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_HOLD_MONSTER%.spl~ ~override~ // spwi507, hold monster
               ~ca#ehm.spl~                ~override~ // [geomantic sorcerer]
+              ~ca#hmon.spl~               ~override~ // [pnp celestials innate] Hold Monster
   LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
   BUT_ONLY IF_EXISTS
 
@@ -965,6 +982,7 @@ COPY_EXISTING ~%WIZARD_SPELL_SHIELD%.spl~ ~override~ // spwi519, spell shield
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_MINOR_SPELL_TURNING%.spl~ ~override~ // spwi522, minor spell turning
+              ~cdwnmst.spl~                      ~override~ // [sp collection innate] minor spell turning innate
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) RET abil_delta END // 3 rounds/level
   BUT_ONLY IF_EXISTS
 
@@ -1265,6 +1283,7 @@ COPY_EXISTING ~%WIZARD_SHADES%.spl~ ~override~ // spwi632, shades
   BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%WIZARD_SPELL_TURNING%.spl~ ~override~ // spwi701, spell turning
+              ~ca#sturn.spl~               ~override~ // [pnp celestials innate] spell turning
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (round * 3) END // 3 rounds/level
   BUT_ONLY IF_EXISTS
 

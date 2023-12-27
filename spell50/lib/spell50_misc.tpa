@@ -290,3 +290,77 @@ COPY_EXISTING ~%NYMPH_CONFUSION%.spl~ ~override~ // spin704, confusion
 //COPY_EXISTING ~spsh004.spl~  ~override~ // unused?
 //  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END
 //  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~cdslmsd.spl~ ~override~ // moon shield [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~cdilend.spl~  ~override~ // endurance of ilmater [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) END // 1 round + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~a#cyr07.spl~ ~override~ // dead blast [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 base_dmg_rolls = 4 END // 4d8 damage +1/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~a#fera03.spl~ ~override~ // 'Call of the Wild' innate [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+COPY_EXISTING ~cdtldst.spl~ ~override~ // destructive blow [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+  
+
+COPY_EXISTING ~cdshar2.spl~ ~override~ // dark bolt [divine remix]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // permanent, just make headers
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // one blade created/level
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        PATCH_IF op = 111 BEGIN
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) level // oddly, energy blades has full headers for levels 1-20
+        END        
+      END  
+    END
+  END
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~a!soulkn.spl~ ~override~ // soul knife, mind blade [song and silence]
+  LPF CD_LEVEL_SELECT-O-MATIC END // 1 round/level
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~cddkebh.spl~ ~override~  // Ebony Hands [sp collection]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
+  PATCH_IF abil_delta > 0 BEGIN // if we added abilities
+    // 1 hp/level bonus plus fighter thac0
+    READ_LONG  0x64 abil_off
+    READ_SHORT 0x68 abil_num
+    READ_LONG  0x6a fx_off
+    FOR (index = (abil_num - abil_delta) ; index < abil_num ; ++index) BEGIN // loop through new abilities only
+      READ_SHORT  (abil_off + 0x10 + (index * 0x28)) level       // just read the level
+      READ_SHORT  (abil_off + 0x1e + (index * 0x28)) abil_fx_num
+      READ_SHORT  (abil_off + 0x20 + (index * 0x28)) abil_fx_idx
+      PATCH_IF level > 20 BEGIN SET thac0 = 0 END ELSE BEGIN SET thac0 = (21 - level) END // minimum thac0 is 0
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (fx_off +        ((index2 + abil_fx_idx) * 0x30)) op
+        SET thac0 = ((level + 2) / 3)
+        PATCH_IF op = 54 BEGIN // fighter thac0
+          WRITE_LONG (fx_off + 0x04 + ((index2 + abil_fx_idx) * 0x30)) thac0
+        END        
+      END  
+    END
+  END  
+  BUT_ONLY IF_EXISTS
+
+COPY_EXISTING ~cddkhmt.spl~ ~override~ // harm touch [sp collection]
+  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_fixed = 1 base_dmg_rolls = 2 END // 2d10 points of damage +1 point per level
+  BUT_ONLY IF_EXISTS
+  
