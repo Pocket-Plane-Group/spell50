@@ -11,3 +11,7 @@
  @8 = ~Stopping installation: 'cap' is not set to an integer.~
  @9 = ~Stopping installation: 'cap' has been set outside the allowed range of 1-50.~
 @10 = ~No custom spell cap found.~
+
+// no translation needed for @11, @12 as they're for a component that should never be in a public release
+@11 = ~Internal Info Tool~
+@12 = ~Internal use only~

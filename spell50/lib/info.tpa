@@ -1,0 +1,156 @@
+OUTER_SPRINT code ~weidu_external/spell50/spellcheck_%cd_game%_code.txt~
+OUTER_SPRINT file ~weidu_external/spell50/spellcheck_%cd_game%.txt~
+
+<<<<<<<<./inline/spellcheck.txt
+>>>>>>>>
+
+COPY ~./inline/spellcheck.txt~ ~%file%~
+     ~./inline/spellcheck.txt~ ~%code%~
+
+OUTER_SPRINT name ~~
+COPY_EXISTING_REGEXP GLOB ~^.+\.spl$~ ~override~
+  READ_SHORT 0x68 abil_num
+  PATCH_IF abil_num > 1 BEGIN
+  
+    // do some rudimentary compares
+    SPRINT debug_msg ~~
+    SET msg_fixed = 0 
+    SET msg_rolls = 0 
+    SET msg_duration = 0 
+    READ_LONG  0x64 abil_off
+    READ_LONG  0x6a fx_off
+    READ_SHORT  (abil_off + 0x26 + (0              * 0x28)) proj1
+    READ_SHORT  (abil_off + 0x26 + ((abil_num - 1) * 0x28)) proj2
+    PATCH_IF proj1 != proj2 BEGIN
+      SPRINT debug_msg ~%debug_msg% projectile changes;~
+    END  
+    READ_SHORT  (abil_off + 0x1e + (0              * 0x28)) abil_fx_num
+    READ_SHORT  (abil_off + 0x1e + ((abil_num - 1) * 0x28)) abil_fx_num_last
+    PATCH_IF abil_fx_num != abil_fx_num_last BEGIN
+      SPRINT debug_msg ~%debug_msg% changing number of effects;~
+    END ELSE BEGIN 
+      READ_SHORT  (abil_off + 0x20 + (0              * 0x28)) abil_fx_idx
+      SET first_off = (fx_off +        (abil_fx_idx * 0x30))
+      READ_SHORT  (abil_off + 0x20 + ((abil_num - 1) * 0x28)) abil_fx_idx
+      SET final_off = (fx_off +        (abil_fx_idx * 0x30))
+      FOR (index2 = 0 ; index2 < abil_fx_num ; ++index2) BEGIN
+        READ_SHORT (first_off +        (index2 * 0x30)) op1
+        READ_SHORT (final_off +        (index2 * 0x30)) op2
+        PATCH_IF op1 != op2 BEGIN
+          SPRINT debug_msg ~%debug_msg% different order of effects;~
+          SET index2 = abil_fx_num // kill loop
+        END ELSE BEGIN
+          PATCH_IF op1 = 12 BEGIN
+            READ_LONG (first_off + 0x04 + (index2 * 0x30)) p1
+            READ_LONG (final_off + 0x04 + (index2 * 0x30)) p2
+            PATCH_IF p1 != p2 AND !msg_fixed BEGIN
+              SPRINT debug_msg ~%debug_msg% fixed damage scales;~
+              SET msg_fixed = 1
+            END  
+            READ_LONG (first_off + 0x1c + (index2 * 0x30)) p1
+            READ_LONG (final_off + 0x1c + (index2 * 0x30)) p2
+            PATCH_IF p1 != p2 AND !msg_rolls BEGIN
+              SPRINT debug_msg ~%debug_msg% die roll damage scales;~
+              SET msg_rolls = 1
+            END
+          END ELSE BEGIN   
+            READ_LONG (first_off + 0x0e + (index2 * 0x30)) p1
+            READ_LONG (final_off + 0x0e + (index2 * 0x30)) p2
+            PATCH_IF p1 != p2 AND !msg_duration BEGIN
+              SPRINT debug_msg ~%debug_msg% duration scales;~
+              SET msg_duration = 1
+            END
+            READ_ASCII (first_off +        (index2 * 0x30)) p1 (14)
+            READ_ASCII (final_off +        (index2 * 0x30)) p2 (14)
+            PATCH_IF ("%p1%" STRING_COMPARE "%p2%") BEGIN
+              SPRINT debug_msg ~%debug_msg% mismatch in pre-duration part of %op1%, effect #%index2%;~
+            END
+            READ_ASCII (first_off + 0x12 + (index2 * 0x30)) p1 (30)
+            READ_ASCII (final_off + 0x12 + (index2 * 0x30)) p2 (30)
+            PATCH_IF ("%p1%" STRING_COMPARE "%p2%") BEGIN
+              SPRINT debug_msg ~%debug_msg% mismatch in post-duration part of %op1%, effect #%index2%;~
+            END
+          END  
+        END        
+      END  
+    END
+    
+    SPRINT spell ~%SOURCE_RES%~
+    TO_LOWER spell
+    READ_LONG 0x08 name_str
+    PATCH_IF ((name_str >= 0) OR // has valid name; if likely a subspell with no name set, preserve name from previous spell patch
+              ("%spell%" STRING_COMPARE_REGEXP "^\(sppr\|spwi\|spin\|spcl\)[0-9][0-9][0-9][a-z]$")) BEGIN
+      READ_STRREF 0x08 name
+    END ELSE BEGIN // subspell, lookup name from suspected parent spell
+      INNER_PATCH_SAVE parent ~%spell%~ BEGIN 
+        REPLACE_TEXTUALLY ~^\(\(sppr\|spwi\|spin\|spcl\)[0-9][0-9][0-9]\)[a-z]$~ ~\1~
+      END
+      INNER_ACTION BEGIN   
+        COPY_EXISTING ~%parent%.spl~ ~override~
+          PATCH_PRINT ~cheking parent %parent% of spell %spell%~
+          READ_STRREF 0x08 name 
+          SPRINT name ~[subspell of %name%]~          
+          BUT_ONLY IF_EXISTS
+      END 
+    END      
+    TO_LOWER name
+    INNER_PATCH_SAVE name ~%name%~ BEGIN
+      REPLACE_TEXTUALLY ~<invalid strref -?[0-9]+>~ ~[no name]~
+    END
+    SET digit = 0
+    SET symbol = 0
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^sppr[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 1000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spwi[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 2000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spin[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 3000
+    END ELSE  
+    PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^spcl[0-9][0-9][0-9].?$" = 0) BEGIN
+      SET digit = 4000
+    END
+    PATCH_IF digit BEGIN    
+      INNER_PATCH ~%spell%~ BEGIN
+        REPLACE_EVALUATE ~^\(sppr\|spwi\|spin\|spcl\)\([0-9][0-9][0-9]\)\([a-z]\)$~ BEGIN
+          SET num = MATCH2 + digit
+          SPRINT extra ~%MATCH3%~
+        END ~%MATCH1%%MATCH2%%MATCH3%~
+        REPLACE_EVALUATE ~^\(sppr\|spwi\|spin\|spcl\)\([0-9][0-9][0-9]\)$~ BEGIN
+          SET num = MATCH2 + digit
+          SPRINT extra ~~
+        END ~%MATCH1%%MATCH2%~
+        TO_LOWER extra
+        LOOKUP_IDS_SYMBOL_OF_INT symbol ~spell~ ~%num%~
+      END
+    END      
+    PATCH_IF IS_AN_INT symbol BEGIN    
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^........$" = 0) BEGIN SPRINT spc " " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^.......$" = 0) BEGIN SPRINT spc "  " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^......$" = 0) BEGIN SPRINT spc "   " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^.....$" = 0) BEGIN SPRINT spc "    " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^....$" = 0) BEGIN SPRINT spc "     " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^...$" = 0) BEGIN SPRINT spc "      " END ELSE
+      PATCH_IF ("%spell%" STRING_COMPARE_REGEXP "^..$" = 0) BEGIN SPRINT spc "       " END ELSE
+                                                                BEGIN SPRINT spc "        " END
+      SPRINT msg "COPY_EXISTING ~%spell%.spl~%spc%~override~ // %name%"
+    END ELSE BEGIN  
+      SPRINT msg "COPY_EXISTING ~%%symbol%%%extra%.spl~ ~override~ // %spell%, %name%"
+    END
+    INNER_ACTION BEGIN 
+      APPEND_OUTER ~%file%~ ~%msg%~ 
+      ACTION_IF ("%debug_msg%" STRING_COMPARE_CASE "") BEGIN 
+        OUTER_INNER_PATCH_SAVE debug_msg ~%debug_msg%~ BEGIN // if debug info, add it
+          REPLACE_TEXTUALLY ~^\(.+\);$~ ~//\1~ // add // for comment and remove trailing semicolon
+        END
+        OUTER_SPRINT msg "%debug_msg%%WNL%%msg%" 
+      END 
+      OUTER_SPRINT msg ~%msg%%WNL%  LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 1) step_dur = (round * 1) step_size = 1 RET abil_delta END%WNL%  BUT_ONLY IF_EXISTS%WNL%%WNL%~
+      APPEND_OUTER ~%code%~ ~%msg%~ KEEP_CRLF 
+    END  
+  END
+  BUT_ONLY
+
+COPY + ~%file%~ ~spell50/spellcheck_%cd_game%_code.txt~
+COPY + ~%code%~ ~spell50/spellcheck_%cd_game%.txt~
