@@ -133,6 +133,7 @@ COPY_EXISTING ~ohtyr2.spl~   ~override~ // divine favor
 //  BUT_ONLY IF_EXISTS
 
 COPY_EXISTING ~%PALADIN_SMITE_EVIL%.spl~ ~override~ // spcl122, smite evil [iwdee]
+              ~cdiplse.spl~              ~override~ // smite evil [iwdification]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR damage_special = 1 damage_rolls = 1 step_size = 3 END // 1d6 + 1d6/3 levels
   BUT_ONLY IF_EXISTS
 
@@ -149,6 +150,7 @@ COPY_EXISTING ~%PALADIN_LAY_ON_HANDS%.spl~ ~override~ // spcl211, lay on hands
               ~%MONK_LAY_ON_HANDS%.spl~    ~override~ // spcl815, lay on hands
               ~%MAZZY_LAY%.spl~            ~override~ // spin827, lay on hands
               ~spin109.spl~                ~override~ // lay on hands
+              ~ikts1.spl~                  ~override~ // [npc kit] lay on hands
   PATCH_IF !game_is_iwdee OR ("%SOURCE_RES%" STRING_COMPARE_CASE "spin109") BEGIN // spin109 is eye of the mage in IWDEE
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR min_dur = 10000 RET abil_delta END // fixed duration, just need the new headers
     // heals 2 hp/level

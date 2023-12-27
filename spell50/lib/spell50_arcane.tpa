@@ -84,6 +84,7 @@ ACTION_IF game_is_iwdee BEGIN // static duration in bg2
 END
 
 COPY_EXISTING ~%WIZARD_FRIENDS%.spl~ ~override~ // spwi107, friends
+              ~a#ghaun2.spl~         ~override~ // friends [mur'neth]
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * (4 - game_is_iwdee)) END // 1 round/level + 4 rounds [bg2] or 3 rounds [iwdee]
   BUT_ONLY IF_EXISTS
 
@@ -313,6 +314,7 @@ COPY_EXISTING ~%WIZARD_MIRROR_IMAGE%.spl~      ~override~ // spwi212, mirror ima
 
 COPY_EXISTING ~%WIZARD_STRENGTH%.spl~ ~override~ // spwi214, strength
               ~spwish29.spl~          ~override~ // strength [iwdee]
+              ~ikts3.spl~             ~override~ // [npc kit] Strength
   PATCH_IF game_is_iwdee BEGIN
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 300 END // 1 hour/level
   END ELSE BEGIN
@@ -431,6 +433,7 @@ COPY_EXISTING ~%WIZARD_HASTE%.spl~ ~override~ // spwi305, haste
 //            ~%GOLEM_HASTE%.spl~  ~override~ // spin978, golem haste - trimmed down to one level in _fixes
               ~spra301.spl~        ~override~ // haste [stalker]
               ~a#re07.spl~         ~override~ // divine remix innate
+              ~ikts7.spl~          ~override~ // [npc kit] Haste
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (round * 3) END // 3 rounds + 1 round/level
   BUT_ONLY IF_EXISTS
 

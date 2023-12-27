@@ -217,6 +217,7 @@ COPY_EXISTING ~%CLERIC_CALL_LIGHTNING%.spl~ ~override~ // sppr302, call lightnin
   
 COPY_EXISTING ~%CLERIC_GLYPH_OF_WARDING%.spl~ ~override~ // sppr304, glyph of warding
               ~cdhmglp.spl~                   ~override~ // glyph of warding innate [divine remix]
+              ~ikts5.spl~                     ~override~ // [npc kit] Glyph of Warding
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = 0 damage_rolls = 1 END // damage is 1d4/level, save negates
   BUT_ONLY IF_EXISTS
   
@@ -469,6 +470,7 @@ COPY_EXISTING ~%CLERIC_IRONSKIN%.spl~ ~override~ // sppr506, iron skins
  ACTION_IF !game_is_iwdee BEGIN // static duration of 1 turn on iwdee
   
   COPY_EXISTING ~%CLERIC_CHAMPIONS_STRENGTH%.spl~ ~override~ // sppr507, champion's strength
+                ~ikts8.spl~                       ~override~ // [npc kit] Champion's Strength
     LPF CD_LEVEL_SELECT-O-MATIC INT_VAR step_dur = (3 * round) RET abil_delta END // 3 rounds/level
     PATCH_IF abil_delta > 0 BEGIN // if we added abilities
       // +1 thac0 every three levels
