@@ -1,6 +1,6 @@
 // oiwd uses a base round value of 7, not 6 like bg/bg2
 OUTER_SET round = 6
-//ACTION_IF original_iwd BEGIN OUTER_SET round = 7 END
+ACTION_IF original_iwd BEGIN OUTER_SET round = 7 END
 
 // for the originals, spells with save-for-half damage have to have two damage opcodes whereas ee has one.
 // most of the time we have to adjust both op 12s on obg2 separately, but sometimes we can unify the 
