@@ -134,6 +134,6 @@ component for Cam to use when making/updating the mod.
 */
 
 BEGIN ~Cam's Info Tool~ DESIGNATED 10000
-DEPRECATED ~Internal use only~
+//DEPRECATED ~Internal use only~
 
 INCLUDE ~spell50/lib/info.tpa~
