@@ -152,5 +152,5 @@ COPY_EXISTING_REGEXP GLOB ~^.+\.spl$~ ~override~
   END
   BUT_ONLY
 
-COPY + ~%file%~ ~spell50/spellcheck_%cd_game%_code.txt~
-COPY + ~%code%~ ~spell50/spellcheck_%cd_game%.txt~
+COPY + ~%code%~ ~spell50/spellcheck_%cd_game%_code.txt~
+COPY + ~%file%~ ~spell50/spellcheck_%cd_game%.txt~
