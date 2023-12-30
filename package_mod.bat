@@ -15,7 +15,7 @@ set mod_folder=spell50
 
 REM /* MODIFY: list here which IE games the mod is compatible with, from this list of possibilities: */
 REM /* %bg1%, %bg2%, %bgt%, %tutu%, %bgee%, %bgiiee%, %iwd1%, %iwdee%, %iwd2%, %iwd2ee%, %iwd-in-bg2%, %pst%, %pstee% */
-set "compatible_games=%bg2%, %bgt%, %tutu%, %bgee%, %bgiiee%, %iwdee%, or %eet%"
+set "compatible_games=%bg1%, %bg2%, %bgt%, %tutu%, %bgee%, %bgiiee%, %iwd1%, %iwdee%, or %eet%"
 
 REM /* MODIFY: these variables have sensible default values but they may need to be tweaked to match your particular mod */
 REM /* the ico_folder is where your .ico files are stored, which is usually the mod's backup or style folder */
