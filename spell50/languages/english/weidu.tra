@@ -1,17 +1,18 @@
 // this file encoded in UTF8
 
  @0 = ~DLC Merger is required before mods can be installed on this game. Check the readme for more information and a link to download DLC Merger.~
- @1 = ~Extend Many Spells to Level:~
+ @1 = ~Set the Spell Level Cap to:~
  @2 = ~50~
  @3 = ~40~
- @4 = ~30~
- @5 = ~20~
+ @4 = ~30 [IWD default]~
+ @5 = ~20 [BG/BG2 default]~
  @6 = ~Use Custom Spell Cap~
  @7 = ~Stopping installation: no valid value for 'cap' found.~
  @8 = ~Stopping installation: 'cap' is not set to an integer.~
  @9 = ~Stopping installation: 'cap' has been set outside the allowed range of 1-50.~
 @10 = ~No custom spell cap found.~
+@11 = ~1~
 
 // no translation needed for @11, @12 as they're for a component that should never be in a public release
-@11 = ~Internal Info Tool~
-@12 = ~Internal use only~
+@12 = ~Internal Info Tool~
+@13 = ~Internal use only~

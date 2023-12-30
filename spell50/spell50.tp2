@@ -54,7 +54,7 @@ LANGUAGE ~English~ ~english~
 
 BEGIN @2 DESIGNATED 0
 SUBCOMPONENT @1 // extend spells
-LABEL ~cd_spell-50~
+LABEL ~ww_spell-50~
 
 OUTER_SET cap = 50
 INCLUDE ~spell50/lib/spell50_core.tpa~
@@ -63,9 +63,9 @@ INCLUDE ~spell50/lib/spell50_core.tpa~
 ///// Spell-40                                         \\\\\
 /////                                                  \\\\\
 
-BEGIN @3 DESIGNATED 1
+BEGIN @3 DESIGNATED 10
 SUBCOMPONENT @1 // extend spells
-LABEL ~cd_spell-40~
+LABEL ~ww_spell-40~
 
 OUTER_SET cap = 40
 INCLUDE ~spell50/lib/spell50_core.tpa~
@@ -74,9 +74,9 @@ INCLUDE ~spell50/lib/spell50_core.tpa~
 ///// Spell-30                                         \\\\\
 /////                                                  \\\\\
 
-BEGIN @4 DESIGNATED 2
+BEGIN @4 DESIGNATED 20
 SUBCOMPONENT @1 // extend spells
-LABEL ~cd_spell-30~
+LABEL ~ww_spell-30~
 
 OUTER_SET cap = 30
 INCLUDE ~spell50/lib/spell50_core.tpa~
@@ -85,21 +85,32 @@ INCLUDE ~spell50/lib/spell50_core.tpa~
 ///// Spell-20                                         \\\\\
 /////                                                  \\\\\
 
-BEGIN @5 DESIGNATED 3
+BEGIN @5 DESIGNATED 30
 SUBCOMPONENT @1 // extend spells
-LABEL ~cd_spell-20~
+LABEL ~ww_spell-20~
 
 OUTER_SET cap = 20
+INCLUDE ~spell50/lib/spell50_core.tpa~
+
+/////                                                  \\\\\
+///// Spell-1                                          \\\\\
+/////                                                  \\\\\
+
+BEGIN @11 DESIGNATED 40
+SUBCOMPONENT @1 // extend spells
+LABEL ~ww_spell-1~
+
+OUTER_SET cap = 1
 INCLUDE ~spell50/lib/spell50_core.tpa~
 
 /////                                                  \\\\\
 ///// Custom Cap                                       \\\\\
 /////                                                  \\\\\
 
-BEGIN @6 DESIGNATED 4
+BEGIN @6 DESIGNATED 50
 SUBCOMPONENT @1 // extend spells
 REQUIRE_PREDICATE FILE_EXISTS ~spell50/custom_cap.txt~ @10
-LABEL ~cd_spell-custom~
+LABEL ~ww_spell-custom~
 
 INCLUDE ~spell50/custom_cap.txt~
 
@@ -133,7 +144,7 @@ if the spells should be extended. No tra references as it's purely a
 component for Cam to use when making/updating the mod.
 */
 
-BEGIN ~Cam's Info Tool~ DESIGNATED 10000
-//DEPRECATED ~Internal use only~
+BEGIN @12 DESIGNATED 10000
+DEPRECATED @13
 
 INCLUDE ~spell50/lib/info.tpa~
