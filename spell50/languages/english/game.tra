@@ -48,6 +48,17 @@
 @2024 = ~ up to a maximum of 40% at 20th level~ // obg2 #26784, magic resistance (sppr509)
 @2025 = ~, up to 18th level or 6th-level spells~ // obg2 25943, contingency (spwi617)
 
+// sourced from oiwd
+@2026 = ~, up to a maximum of 40%~ // oiwd 26784, magic resistance sppr519
+@2027 = ~, to a maximum of 1-3 + 20 points of fire damage~ // oiwd 12141, burning hands spwi103
+@2028 = ~, up to a maximum of 8-24 hit points at level 8~// oiwd 6393, snilloc's snowball swarm spwi220
+@2029 = ~ (up to a maximum of 10-60)~ // oiwd 12177, fireball spwi304
+@2030 = ~ (maximum damage of 10-60)~ // oiwd 12179, lightning bolt spwi308
+@2031 = ~ (up to a maximum of 15d6)~ // oiwd 24915, sunfire spwi519
+
+// sourced from obg
+@2032 = ~, to a maximum drain of 6-36 for a 12th level caster~ // obg #12190, spwi314 vampiric touch description
+
 /////                                                  \\\\\
 ///// spell description text to be replaced            \\\\\
 /////                                                  \\\\\
@@ -62,6 +73,8 @@
 
 @3005 = ~ up to a total of 5 at 9th level~ // bg2ee 12180, magic missile (spwi112)
 @3006 = ~, and a maximum of five missiles at 9th level~
+@3012 = ~, up to a maximum of five missiles at 9th level~ // oiwd 12180, magic missile spwi112
+@3013 = ~, up to a total of five missiles at 9th level~ // obg 12180, magic missile spwi112
 @3007 = ~ and so on~
 
 @3008 = ~, to a maximum of seven missiles at 25th level~ // iwdee 24246, spwi430 mordenkainen's force missiles
@@ -69,3 +82,5 @@
 
 @3010 = ~17+ level:  8d8  +  6/round~ // from obg2 6065, poison (sppr411)
 @3011 = ~17+ level: additional 2d8 per two levels  +  6/round~
+
+// 3012, 3013 out of order in MM substituion, above

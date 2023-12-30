@@ -3,9 +3,11 @@ ACTION_DEFINE_ASSOCIATIVE_ARRAY cd_string_remove BEGIN
   ~%CLERIC_SPIRIT_FIRE%~,                  2001 => 2000
   ~%SUN_SOUL_SUN_SOULRAY%~,                2002 => 2000
   ~%WIZARD_LIGHTNING_BOLT%~,               2003 => 2000 // also covers talos lightning, avenger lightning
+  ~%WIZARD_LIGHTNING_BOLT%~,               2030 => 2000 // oiwd
   ~spwi399~,                               2003 => 2000 // (unused) lightning bolt, uses different string on iwdee
   ~spdd03~,                                2004 => 2000 // dragon disiple breath attack
   ~%WIZARD_VAMPIRIC_TOUCH%~,               2005 => 2000 // also covers bhallspawn vamp touch, dark moon innate
+  ~%WIZARD_VAMPIRIC_TOUCH%~,               2032 => 2000 // obg
   ~spdm108~,                               2005 => 2000 // dark moon innate vamp touch (different string on iwdee)
   ~%WIZARD_VAMPIRIC_TOUCH%~,               2023 => 2000 // obg2 vamp touch string
   ~%CLERIC_SPIRITUAL_HAMMER%~,             2006 => 2000 // also covers spin113
@@ -13,31 +15,43 @@ ACTION_DEFINE_ASSOCIATIVE_ARRAY cd_string_remove BEGIN
   ~%CLERIC_MAGIC_RESISTANCE%~,             2007 => 2000 // magic resistance, bg2ee phrase
   ~%CLERIC_MAGIC_RESISTANCE%~,             2016 => 2000 // magic resistance, iwdee phrase
   ~%CLERIC_MAGIC_RESISTANCE%~,             2024 => 2000 // magic resistance, obg2 phrase
+  ~%CLERIC_MAGIC_RESISTANCE%~,             2026 => 2000 // magic resistance, oiwd phrase
   ~%WIZARD_BURNING_HANDS%~,                2008 => 2000 // bg2ee, burning hands
   ~%WIZARD_BURNING_HANDS%~,                2017 => 2000 // iwdee, burning hands
+  ~%WIZARD_BURNING_HANDS%~,                2027 => 2000 // oiwd, burning hands
   ~%WIZARD_MAGIC_MISSILE%~,                2009 => 2000 // has a substitution, below
-  ~%WIZARD_FIREBALL%~,                     2010 => 2000
+  ~%WIZARD_FIREBALL%~,                     2010 => 2000 // bg2ee
+  ~%WIZARD_FIREBALL%~,                     2029 => 2000 // oiwd
   ~%WIZARD_CONTINGENCY%~,                  2011 => 2000 // bg2ee/iwdee string
   ~%WIZARD_CONTINGENCY%~,                  2025 => 2000 // obg2 string
   ~%CLERIC_BARKSKIN%~,                     2012 => 2000 // barkskin mentions max AC on iwdee
   ~%CLERIC_CALL_LIGHTNING%~,               2014 => 2000 
   ~%CLERIC_HOLY_SMITE%~,                   2015 => 2000
   ~%CLERIC_UNHOLY_BLIGHT%~,                2015 => 2000 // unholy blight uses exact same phrase as holy smite
-  ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%~,      2018 => 2000
-  ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%~,      2019 => 2000
+  ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%~,      2018 => 2000 // iwdee
+  ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%~,      2019 => 2000 // iwdee
+  ~%WIZARD_SNILLOCS_SNOWBALL_SWARM%~,      2028 => 2000 // oiwd
   ~%WIZARD_LANCE_OF_DISRUPTION%~,          2020 => 2000
   ~%WIZARD_VITRIOLIC_SPHERE%~,             2021 => 2000
-  ~%WIZARD_SUN_FIRE%~,                     2022 => 2000
+  ~%WIZARD_SUN_FIRE%~,                     2022 => 2000 // bg2ee
+  ~%WIZARD_SUNFIRE%~,                      2022 => 2031 // oiwd
                                            
   ~%SUN_SOUL_FLAMING_FISTS%~,              3001 => 3002
   ~%CLERIC_POISON%~,                       3003 => 3004 // bg2ee
   ~%CLERIC_POISON%~,                       3010 => 3011 // obg2
   ~%WIZARD_MAGIC_MISSILE%~,                3005 => 3007 // bg2ee magic missile
   ~%WIZARD_MAGIC_MISSILE%~,                3006 => 3007 // iwdee magic missile
+  ~%WIZARD_MAGIC_MISSILE%~,                3012 => 3007 // oiwd magic missile
+  ~%WIZARD_MAGIC_MISSILE%~,                3013 => 3007 // obg magic missile
   ~%WIZARD_MORDENKAINENS_FORCE_MISSILES%~, 3008 => 3009
   
 END
 
+ACTION_IF original_iwd BEGIN
+  ACTION_DEFINE_ASSOCIATIVE_ARRAY cd_string_remove BEGIN
+   ~spin106~,               2023 => 2000 // obg2 vamp touch string
+  END
+END
 <<<<<<<<./inline/spell50/string_replace.tpa
 
 OUTER_SPRINT new_text @%tra_ref%

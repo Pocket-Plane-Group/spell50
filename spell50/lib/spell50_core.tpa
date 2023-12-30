@@ -47,9 +47,10 @@ END ELSE BEGIN // bg2, bgt, tutu, iwdee, eet, bgee, bg2ee
   INCLUDE ~spell50/lib/spell50_arcane.tpa~  // mainline arcane spells
   INCLUDE ~spell50/lib/spell50_divine.tpa~  // mainline divine spells
   INCLUDE ~spell50/lib/spell50_misc.tpa~    // other spells
-  INCLUDE ~spell50/lib/spell50_strings.tpa~ // other spells
 
 END
+
+INCLUDE ~spell50/lib/spell50_strings.tpa~ // update descriptions
 
 ACTION_PHP_EACH new_effs AS params => source BEGIN
   ACTION_IF !FILE_EXISTS_IN_GAME ~%params_0%.eff~ BEGIN
