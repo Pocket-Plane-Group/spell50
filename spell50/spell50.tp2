@@ -10,7 +10,7 @@ ALWAYS
   
     OUTER_SET cd_spell50 = 1
   
-    INCLUDE ~spell50/lib/always.tpa~
+    INCLUDE ~spell50/lib/game_checks.tpa~
   
     ACTION_IF enhanced_edition THEN BEGIN
 
@@ -147,4 +147,5 @@ component for Cam to use when making/updating the mod.
 BEGIN @12 DESIGNATED 10000
 DEPRECATED @13
 
+OUTER_SPRINT cd_game ~obg2~
 INCLUDE ~spell50/lib/info.tpa~
