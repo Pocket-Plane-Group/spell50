@@ -32,7 +32,7 @@ ALWAYS
 
 END
 
-VERSION ~v7~
+VERSION ~v8~
 
 README ~spell50/readme-spell50-%LANGUAGE%.html~ ~spell50/readme-spell50.html~
 

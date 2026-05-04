@@ -258,7 +258,7 @@ END ELSE BEGIN
   // already fixed on iwdee, which just changes the level 1 header duration
   COPY_EXISTING ~%WIZARD_SUMMON_PLANATAR_GOOD%.spl~ ~override~ // spwi923, summon planetar
                 ~%WIZARD_SUMMON_PLANATAR_EVIL%.spl~ ~override~ // spwi924, summon dark planetar
-    LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 78 duration = 126 END
+    LPF ALTER_EFFECT INT_VAR silent = 1 header = 0 match_duration = 78 duration = 126 END
     BUT_ONLY IF_EXISTS
 
 END
