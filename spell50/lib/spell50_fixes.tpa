@@ -134,7 +134,7 @@ END ELSE BEGIN
 
   // While it's unused, Mass Healing (bhaal1a) has the wrong target for op 164 on multiple headers.
   COPY_EXISTING ~bhaal1a.spl~ ~override~ // unused
-    LPF ALTER_EFFECT INT_VAR match_target = 3 target = 2 END
+    LPF ALTER_EFFECT INT_VAR silent = 1 match_target = 3 target = 2 END
     BUT_ONLY IF_EXISTS
 
   // bhaal1b: (BG2EE) The duration is +1 round every 2 levels, but at some point the spell goes from level 18 to 21 instead of level 20.
@@ -193,7 +193,7 @@ END ELSE BEGIN
  
   // Shillelagh (sppr110)  is two seconds short in duration at level 20 - already fixed on iwdee
   COPY_EXISTING ~%CLERIC_SHILLELAGH%.spl~ ~override~ // sppr110, shillelagh
-    LPF ALTER_EFFECT INT_VAR header = 19 match_duration = 142 duration = 144 END
+    LPF ALTER_EFFECT INT_VAR silent = 1 header = 19 match_duration = 142 duration = 144 END
     BUT_ONLY IF_EXISTS
 
   // disables the potion-drinking string 16233, "*gulp*", when cast at level <10 - fine on iwdee
@@ -306,7 +306,7 @@ COPY_EXISTING ~%PALADIN_SUMMON_DEVA%.spl~           ~override~ // spcl923, summo
               ~%BLACKGUARD_SUMMON_FALLEN_DEVA%.spl~ ~override~ // spcl935, summon fallen deva
               ~%CLERIC_SUMMON_DEVA%.spl~            ~override~ // sppr726, summon deva
               ~%CLERIC_SUMMON_FALLEN_DEVA%.spl~     ~override~ // sppr727, summon fallen deva
-  LPF CD_MISSING_SPELL_HEADERS INT_VAR first_missing = 9 last_missing = 13 END 
+  LPF cd_missing_spell_headers INT_VAR first_missing = 9 last_missing = 13 END 
   READ_LONG  0x64 abil_off
   READ_SHORT 0x68 abil_num
   READ_LONG  0x6a fx_off
@@ -357,7 +357,7 @@ COPY_EXISTING ~%WIZARD_MINOR_SPELL_DEFLECTION%.spl~ ~override~ // spwi318, minor
 
 // The expiry sound from Protection from Electricity (spwi512) can be blocked by MR when cast at level 20.
 COPY_EXISTING ~%WIZARD_PROTECTION_FROM_ELECTRICITY%.spl~ ~override~ // spwi512, protection from electricity
-  LPF ALTER_EFFECT INT_VAR match_resist_dispel = 1 resist_dispel = 3 END
+  LPF ALTER_EFFECT INT_VAR silent = 1 match_resist_dispel = 1 resist_dispel = 3 END
   BUT_ONLY IF_EXISTS
 
 // increments--rather than sets--magic damage resistance 100% when cast at level >= 19. Another BG2EE find, same caveats as above.

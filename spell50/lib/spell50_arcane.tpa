@@ -18,9 +18,9 @@ ACTION_IF !game_is_iwdee BEGIN // static duration in iwdee
       COPY_EXISTING ~grease.pro~ ~override/grease%index%.pro~
         WRITE_BYTE 0x216 (index + 3) // num repitions
         
-      ADD_PROJECTILE ~override/grease%index%.pro~  
-        
     END
+        
+    ADD_PROJECTILE ~override/grease%index%.pro~  
     
   END  
 

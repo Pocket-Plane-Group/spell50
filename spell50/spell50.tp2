@@ -116,15 +116,13 @@ INCLUDE ~spell50/custom_cap.txt~
 
 ACTION_IF !VARIABLE_IS_SET cap BEGIN
   ABORT @7
-END ELSE BEGIN
-  ACTION_IF !IS_AN_INT cap BEGIN
-    ABORT @8
-  END ELSE BEGIN
-    ACTION_IF ((cap < 1) OR (cap > 50)) BEGIN
-      ABORT @9
-    END 
-  END
-END 
+END ELSE 
+ACTION_IF !IS_AN_INT cap BEGIN
+  ABORT @8
+END ELSE 
+ACTION_IF ((cap < 1) OR (cap > 50)) BEGIN
+  ABORT @9
+END
 
 // only get here if cap is a number between 1 and 50
 INCLUDE ~spell50/lib/spell50_core.tpa~

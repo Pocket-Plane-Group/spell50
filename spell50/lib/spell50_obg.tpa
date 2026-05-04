@@ -67,7 +67,7 @@ COPY_EXISTING ~%CLERIC_AID%.spl~ ~override~ // sppr201, aid
   BUT_ONLY IF_EXISTS
   
 COPY_EXISTING ~%CLERIC_BARKSKIN%.spl~ ~override~ // sppr202, barkskin
-  LPF CD_MISSING_SPELL_HEADERS INT_VAR first_missing = 7 last_missing = 7 END 
+  LPF cd_missing_spell_headers INT_VAR first_missing = 7 last_missing = 7 END 
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR base_dur = (4 * round) RET abil_delta END // four rounds + 1 round/level 
   // do this whether we added or deleted abilities to fix durations on new header
   READ_LONG  0x64 abil_off
@@ -97,7 +97,7 @@ COPY_EXISTING ~%CLERIC_BARKSKIN%.spl~ ~override~ // sppr202, barkskin
   
 COPY_EXISTING ~%CLERIC_FLAME_BLADE%.spl~ ~override~ // sppr206, flame blade
   LPF ALTER_EFFECT INT_VAR header = 0 match_duration = 60 duration = 30 END // fix level 1 duration before extending
-  LPF CD_MISSING_SPELL_HEADERS INT_VAR first_missing = 4 last_missing = 4 END 
+  LPF cd_missing_spell_headers INT_VAR first_missing = 4 last_missing = 4 END 
   LPF ALTER_EFFECT INT_VAR header = 1 match_duration = 30 duration = 36 END // fix level 4 duration before extending
   LPF CD_LEVEL_SELECT-O-MATIC INT_VAR dur_special = 1 step_size = 2 END // four rounds + 1 round/2 levels
   BUT_ONLY IF_EXISTS
